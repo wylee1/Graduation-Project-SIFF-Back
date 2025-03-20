@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'loginpasstest_ui.dart';
+import 'home_ui.dart';
 import 'login_back.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -48,7 +48,7 @@ class LoginScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const LoginPassTestPage()),
+                            builder: (context) => const MainScreen()),
                       );
                     } catch (e) {
                       debugPrint("로그인 실패: $e");
