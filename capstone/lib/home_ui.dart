@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'login_ui.dart';
+import 'home_back.dart';
+import 'test_ui.dart';
+import 'test1_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   // 각 아이템을 눌렀을 때 표시할 화면
   final List<Widget> _pages = [
     const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('Home Page', style: TextStyle(fontSize: 24))),
+    const Center(child: Text('Community Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Community Page', style: TextStyle(fontSize: 24))),
   ];
 
@@ -30,10 +34,29 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: null, // 텍스트 제거
         backgroundColor: Colors.white30, // AppBar 색상
-        leadingWidth: 0, // 여백 제거
+        leadingWidth: 56, // 여백 제거 -> 0 이여서 반응이 없어서 56으로 바꿨습니다.
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: () {
+          // 관리자 권한 실행 확인 
+          onPressed: () async {
+            debugPrint("press");
+            try{
+              if(await CheckUID() == 1){
+                Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const TestScreen1()),
+                      );
+              }else {
+                Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const TestScreen()),
+                      );
+              }
+            } catch(e){
+              print("error $e");
+            }
             // 햄버거 메뉴 클릭 시 수행할 액션 추가
           },
         ),
@@ -62,7 +85,16 @@ class _MainScreenState extends State<MainScreen> {
           // 프로필 아이콘 (아이콘 버튼)
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {
+            // 프로필 클릭 시 위에까지 로그아웃 구현(임시) 버튼 생기면 다른곳으로 이동동
+            onPressed: () async {
+              try {
+                await Logout();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              } catch (error) {
+                print("logout failed $error");
+              }
               // 프로필 클릭 시 수행할 액션 추가
             },
           ),
