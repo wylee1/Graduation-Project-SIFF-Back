@@ -1,0 +1,2 @@
+C:/Users/ebmmq/Desktop/Graduation-Project-SIFF-Back/capstone/android/app/.cxx/Debug/39492x4m/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/ebmmq/Desktop/Graduation-Project-SIFF-Back/capstone/android/app/.cxx/Debug/39492x4m/armeabi-v7a/CMakeFiles/rebuild_cache.dir
