@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "795714982068",
+    "project_id": "graduation-project-452806",
+    "storage_bucket": "graduation-project-452806.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:795714982068:android:1dc16859e2583b608f87e1",
+        "android_client_info": {
+          "package_name": "com.example.capstone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "795714982068-5s8qusmk9839oiospb3f5g2k4freg1uc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.capstone",
+            "certificate_hash": "606cad1ea8528b5adf6af907a2d61835b180eb80"
+          }
+        },
+        {
+          "client_id": "795714982068-1rl40ae7dv3a4rosqo0fvcafl8bauvk9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ8T6qLqxsFbD8fbmv4-pf0U4NxYvxlag"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "795714982068-1rl40ae7dv3a4rosqo0fvcafl8bauvk9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "795714982068-i2tfjd5p9hteobjdc0i238gh57us8fu2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.capstone"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
