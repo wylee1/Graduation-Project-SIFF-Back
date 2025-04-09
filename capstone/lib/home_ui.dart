@@ -35,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
   // 각 아이템을 눌렀을 때 표시할 화면
   final List<Widget> _pages = [
     const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('Community Page', style: TextStyle(fontSize: 24))),
+    const HomeMapPage(),
     const Center(child: Text('Community Page', style: TextStyle(fontSize: 24))),
   ];
 

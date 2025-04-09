@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'home_back.dart';
 import 'login_ui.dart'; // LoginScreen을 사용하려면 import가 필요합니다.
 
 Future<void> main() async {
@@ -9,7 +11,10 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+  await NaverMapSdk.instance.initialize(
+    clientId: '1bgj4skngh', 
+  );
+  await requestLocationPermission();
   runApp(const MyApp());
 }
 
