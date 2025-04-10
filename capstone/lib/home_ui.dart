@@ -15,7 +15,6 @@ class _MainScreenState extends State<MainScreen> {
   // 하단 네비게이션 바 상태
   int _selectedIndex = 1;
 
-
   // 필터 확장 상태 제어
   bool _isFilterExpanded = false;
 
@@ -28,10 +27,10 @@ class _MainScreenState extends State<MainScreen> {
     {'name': '성폭력', 'icon': Icons.warning, 'color': Colors.purple},
     {'name': '마약', 'icon': Icons.medication, 'color': Colors.teal},
   ];
-  
-   // 필터 선택 상태
+
+  // 필터 선택 상태
   List<bool> _filterSelected = [];
-  
+
   // 각 아이템을 눌렀을 때 표시할 화면
   final List<Widget> _pages = [
     const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
@@ -68,29 +67,26 @@ class _MainScreenState extends State<MainScreen> {
         leadingWidth: 56, // 여백 제거 -> 0 이여서 반응이 없어서 56으로 바꿨습니다.
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          // 관리자 권한 실행 확인 
+          // 관리자 권한 실행 확인
           onPressed: () async {
             debugPrint("press");
-            try{
-              if(await CheckUID() == 1){
+            try {
+              if (await CheckUID() == 1) {
                 Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const TestScreen1()),
-                      );
-              }else {
+                  context,
+                  MaterialPageRoute(builder: (context) => const TestScreen1()),
+                );
+              } else {
                 Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const TestScreen()),
-                      );
+                  context,
+                  MaterialPageRoute(builder: (context) => const TestScreen()),
+                );
               }
-            } catch(e){
+            } catch (e) {
               print("error $e");
             }
             // 햄버거 메뉴 클릭 시 수행할 액션 추가
           },
-
         ),
         actions: [
           // 검색 및 프로필 아이콘
@@ -134,22 +130,10 @@ class _MainScreenState extends State<MainScreen> {
 
       body: Stack(
         children: [
-          // 지도 플레이스홀더
-          Container(
-            color: Colors.grey[200],
-            child: Center(
-              child: Text(
-                '지도 영역',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
+          // 1. 현재 선택된 페이지를 먼저 그립니다 (배경)
+          _pages[_selectedIndex],
 
-          // 필터 섹션
+          // 2. 그 위에 필터 섹션을 오버레이
           Positioned(
             top: 16,
             left: 16,
@@ -174,7 +158,6 @@ class _MainScreenState extends State<MainScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: List.generate(_filterTypes.length, (index) {
-                          // 각 필터의 색상 가져오기
                           final filterColor =
                               _filterTypes[index]['color'] as Color?;
 
@@ -186,13 +169,11 @@ class _MainScreenState extends State<MainScreen> {
                               label: Text(_filterTypes[index]['name']),
                               selected: _filterSelected[index],
                               onSelected: (_) => _onFilterSelected(index),
-                              // 안전한 색상 처리
                               selectedColor:
                                   _filterSelected[index] && filterColor != null
                                       ? filterColor.withOpacity(0.2)
                                       : null,
                               checkmarkColor: filterColor,
-                              // 선택되지 않았을 때의 기본 배경색 설정
                               backgroundColor: Colors.grey[200],
                             ),
                           );
