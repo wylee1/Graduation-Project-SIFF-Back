@@ -3,6 +3,7 @@ import 'login_ui.dart';
 import 'home_back.dart';
 import 'test_ui.dart';
 import 'test1_ui.dart';
+import 'community_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -35,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
     const HomeMapPage(),
-    const Center(child: Text('Community Page', style: TextStyle(fontSize: 24))),
+    const CommunityScreen(),
   ];
 
   @override
