@@ -131,60 +131,60 @@ class _MainScreenState extends State<MainScreen> {
 
       body: Stack(
         children: [
-          // 1. 현재 선택된 페이지를 먼저 그립니다 (배경)
           _pages[_selectedIndex],
 
-          // 2. 그 위에 필터 섹션을 오버레이
-          Positioned(
-            top: 16,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                // 메인 필터 버튼
-                FloatingActionButton(
-                  mini: true,
-                  backgroundColor: Colors.white,
-                  onPressed: _toggleFilterExpansion,
-                  child: Icon(
-                    Icons.filter_list,
-                    color: Colors.black,
-                  ),
-                ),
-
-                // 확장된 필터들 (수평 스크롤 가능)
-                if (_isFilterExpanded)
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(_filterTypes.length, (index) {
-                          final filterColor =
-                              _filterTypes[index]['color'] as Color?;
-
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: FilterChip(
-                              avatar: Icon(_filterTypes[index]['icon']),
-                              label: Text(_filterTypes[index]['name']),
-                              selected: _filterSelected[index],
-                              onSelected: (_) => _onFilterSelected(index),
-                              selectedColor:
-                                  _filterSelected[index] && filterColor != null
-                                      ? filterColor.withOpacity(0.2)
-                                      : null,
-                              checkmarkColor: filterColor,
-                              backgroundColor: Colors.grey[200],
-                            ),
-                          );
-                        }),
-                      ),
+          // Home 화면 (index == 1) 에서만 필터 섹션 보이도록 조건 설정
+          if (_selectedIndex == 1)
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: Row(
+                children: [
+                  // 메인 필터 버튼
+                  FloatingActionButton(
+                    mini: true,
+                    backgroundColor: Colors.white,
+                    onPressed: _toggleFilterExpansion,
+                    child: const Icon(
+                      Icons.filter_list,
+                      color: Colors.black,
                     ),
                   ),
-              ],
+
+                  // 확장된 필터들
+                  if (_isFilterExpanded)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(_filterTypes.length, (index) {
+                            final filterColor =
+                                _filterTypes[index]['color'] as Color?;
+
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: FilterChip(
+                                avatar: Icon(_filterTypes[index]['icon']),
+                                label: Text(_filterTypes[index]['name']),
+                                selected: _filterSelected[index],
+                                onSelected: (_) => _onFilterSelected(index),
+                                selectedColor: _filterSelected[index] &&
+                                        filterColor != null
+                                    ? filterColor.withOpacity(0.2)
+                                    : null,
+                                checkmarkColor: filterColor,
+                                backgroundColor: Colors.grey[200],
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
 
