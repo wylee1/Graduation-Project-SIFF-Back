@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_ui.dart'; // 로그아웃 기능을 위해 import
-import 'test_ui.dart';
-import 'test1_ui.dart';
-import 'community_ui.dart';
-import 'home_ui.dart';
 
 class ReportUI extends StatefulWidget {
   const ReportUI({Key? key}) : super(key: key);
@@ -13,9 +8,6 @@ class ReportUI extends StatefulWidget {
 }
 
 class _ReportUIState extends State<ReportUI> {
-  // 하단 네비게이션 바 상태
-  int _selectedIndex = 2; // COMMUNITY 탭 선택 상태로 시작
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
