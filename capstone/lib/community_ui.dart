@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'report_ui.dart'; // ReportUI 가져오기
 
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({Key? key}) : super(key: key);
@@ -20,24 +21,33 @@ class CommunityScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Row(
-                  children: [
-                    const Icon(Icons.note_alt_outlined),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Create',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        Text(
-                          'New Incidence Report',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ],
+                // 신고서 생성 버튼에 onTap 기능 추가
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ReportUI()),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.note_alt_outlined),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Create',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            'New Incidence Report',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
