@@ -4,6 +4,7 @@ import 'home_back.dart';
 import 'test_ui.dart';
 import 'test1_ui.dart';
 import 'community_ui.dart';
+import 'usersetting_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -113,17 +114,13 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.person),
 
-            // 프로필 클릭 시 위에까지 로그아웃 구현(임시) 버튼 생기면 다른곳으로 이동동
-            onPressed: () async {
-              try {
-                await Logout();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              } catch (error) {
-                print("logout failed $error");
-              }
-              // 프로필 클릭 시 수행할 액션 추가
+            // 프로필 클릭 시 UserSettingScreen으로 이동
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UserSettingScreen()),
+              );
             },
           ),
         ],
