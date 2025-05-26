@@ -61,13 +61,18 @@ class _HomeMapPageState extends State<HomeMapPage> {
           await FirebaseFirestore.instance.collection('map_marker').get();
 
       Set<NMarker> markers = {};
-
+      mapController.clearOverlays();
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final loc = data['위치'] as Map<String, dynamic>? ?? {};
         final lat = loc['위도'] ?? 0.0;
         final lng = loc['경도'] ?? 0.0;
         final Type = data['Crime Type'] ?? '유형없음';
+        if (widget.selectedFilters.isNotEmpty &&!widget.selectedFilters
+        .map((e) => e.toLowerCase())
+        .contains(Type.toString().toLowerCase())) {
+          continue;
+        }
         final name = data['name'] ?? '이름없음'; // 최상위에서 읽기
         final Des = data['Description'] ?? '설명없음';
         final OCTime = data['Time'] ?? '시간없음';

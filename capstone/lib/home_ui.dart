@@ -83,7 +83,10 @@ class _MainScreenState extends State<MainScreen> {
             index: _selectedIndex,
             children: [
               MessageScreen(),
-              const HomeMapPage(),
+              HomeMapPage(
+                key: ValueKey(_getSelectedFilterNames().join(',')),
+                selectedFilters: _getSelectedFilterNames(),
+              ),
               const CommunityScreen(),
             ],
           ),
@@ -142,7 +145,12 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-
+List<String> _getSelectedFilterNames() {
+  return List.generate(_filterTypes.length, (i) {
+    if (_filterSelected[i]) return _filterTypes[i]['name'] as String;
+    return null;
+  }).whereType<String>().toList();
+}
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
