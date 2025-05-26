@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
 import 'home_back.dart';
-import 'test_ui.dart';
-import 'test1_ui.dart';
 import 'community_ui.dart';
 import 'usersetting_ui.dart';
+import 'message_ui.dart';
+import 'report_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // 하단 네비게이션 바 상태
   int _selectedIndex = 1;
-
-  // 필터 확장 상태 제어
   bool _isFilterExpanded = false;
 
-  // 아이콘과 함께하는 필터 유형 (색상 추가)
-  final List<Map<String, dynamic>> _filterTypes = [
+  final _filterTypes = [
     {
       'name': 'Arson',
       'icon': Icons.local_fire_department,
@@ -32,108 +28,65 @@ class _MainScreenState extends State<MainScreen> {
     {'name': 'Sexual Violence', 'icon': Icons.warning, 'color': Colors.purple},
     {'name': 'Drug', 'icon': Icons.medication, 'color': Colors.teal},
   ];
-
-  // 필터 선택 상태
-  List<bool> _filterSelected = [];
-
-  // 각 아이템을 눌렀을 때 표시할 화면
-  final List<Widget> _pages = [
-    const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
-    const HomeMapPage(),
-    const CommunityScreen(),
-  ];
+  late List<bool> _filterSelected;
 
   @override
   void initState() {
     super.initState();
-    // 필터 선택 상태를 필터 유형 수에 맞게 초기화
-    _filterSelected = List.generate(_filterTypes.length, (index) => false);
+    _filterSelected = List.filled(_filterTypes.length, false);
   }
 
-  void _toggleFilterExpansion() {
-    setState(() {
-      _isFilterExpanded = !_isFilterExpanded;
-    });
-  }
-
-  void _onFilterSelected(int index) {
-    setState(() {
-      _filterSelected[index] = !_filterSelected[index];
-    });
-  }
+  void _toggleFilterExpansion() =>
+      setState(() => _isFilterExpanded = !_isFilterExpanded);
+  void _onFilterSelected(int idx) =>
+      setState(() => _filterSelected[idx] = !_filterSelected[idx]);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar (이전과 동일)
+      drawer: _buildDrawer(context),
       appBar: AppBar(
-        title: null, // 텍스트 제거
-        backgroundColor: Colors.white30, // AppBar 색상
-        leadingWidth: 56, // 여백 제거 -> 0 이여서 반응이 없어서 56으로 바꿨습니다.
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          // 관리자 권한 실행 확인
-          onPressed: () async {
-            debugPrint("press");
-            try {
-              if (await CheckUID() == 1) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TestScreen1()),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TestScreen()),
-                );
-              }
-            } catch (e) {
-              print("error $e");
-            }
-            // 햄버거 메뉴 클릭 시 수행할 액션 추가
-          },
-        ),
+        backgroundColor: Colors.white30,
+        leadingWidth: 56,
         actions: [
-          // 검색 및 프로필 아이콘
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Container(
-              width: 250,
+            child: SizedBox(
+              width: 220,
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search...',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
+                    borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
                   fillColor: Colors.grey[200],
-                  contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.person),
-
-            // 프로필 클릭 시 UserSettingScreen으로 이동
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UserSettingScreen()),
-              );
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UserSettingScreen()),
+            ),
           ),
         ],
       ),
-
       body: Stack(
         children: [
-          _pages[_selectedIndex],
-
-          // Home 화면 (index == 1) 에서만 필터 섹션 보이도록 조건 설정
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              MessageScreen(),
+              const HomeMapPage(),
+              const CommunityScreen(),
+            ],
+          ),
           if (_selectedIndex == 1)
             Positioned(
               top: 16,
@@ -141,40 +94,31 @@ class _MainScreenState extends State<MainScreen> {
               right: 16,
               child: Row(
                 children: [
-                  // 메인 필터 버튼
                   FloatingActionButton(
                     mini: true,
                     backgroundColor: Colors.white,
                     onPressed: _toggleFilterExpansion,
-                    child: const Icon(
-                      Icons.filter_list,
-                      color: Colors.black,
-                    ),
+                    child: const Icon(Icons.filter_list, color: Colors.black),
                   ),
-
-                  // 확장된 필터들
                   if (_isFilterExpanded)
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: List.generate(_filterTypes.length, (index) {
-                            final filterColor =
-                                _filterTypes[index]['color'] as Color?;
-
+                          children: List.generate(_filterTypes.length, (i) {
+                            final f = _filterTypes[i];
                             return Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 4.0),
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               child: FilterChip(
-                                avatar: Icon(_filterTypes[index]['icon']),
-                                label: Text(_filterTypes[index]['name']),
-                                selected: _filterSelected[index],
-                                onSelected: (_) => _onFilterSelected(index),
-                                selectedColor: _filterSelected[index] &&
-                                        filterColor != null
-                                    ? filterColor.withOpacity(0.2)
+                                avatar: Icon(f['icon'] as IconData),
+                                label: Text(f['name'] as String),
+                                selected: _filterSelected[i],
+                                onSelected: (_) => _onFilterSelected(i),
+                                selectedColor: _filterSelected[i]
+                                    ? (f['color'] as Color).withOpacity(0.2)
                                     : null,
-                                checkmarkColor: filterColor,
+                                checkmarkColor: f['color'] as Color,
                                 backgroundColor: Colors.grey[200],
                               ),
                             );
@@ -187,30 +131,66 @@ class _MainScreenState extends State<MainScreen> {
             ),
         ],
       ),
-
-      // 하단 네비게이션 바
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: 'MESSAGE',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'HOME',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'COMMUNITY',
-          ),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.warning), label: 'MESSAGE'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'HOME'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'COMMUNITY'),
         ],
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: (idx) => setState(() => _selectedIndex = idx),
       ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const SizedBox(height: 40),
+          _drawerItem('• Home', () {
+            setState(() => _selectedIndex = 1);
+            Navigator.pop(context);
+          }, bold: true),
+          _drawerItem('• Emergency Disaster Message', () {
+            setState(() => _selectedIndex = 0);
+            Navigator.pop(context);
+          }),
+          _drawerItem('• Community', () {
+            setState(() => _selectedIndex = 2);
+            Navigator.pop(context);
+          }),
+          Padding(
+            padding: const EdgeInsets.only(left: 24),
+            child: _drawerItem('· Incident Report', () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportUI()),
+              );
+            }),
+          ),
+          _drawerItem('• Settings', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UserSettingScreen()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerItem(String title, VoidCallback onTap, {bool bold = false}) {
+    return ListTile(
+      title: Text(
+        title,
+        style:
+            TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+      ),
+      onTap: onTap,
     );
   }
 }
