@@ -22,7 +22,8 @@ Future<bool> CheckUID() async {
 }
 
 class HomeMapPage extends StatefulWidget {
-  const HomeMapPage({super.key});
+  final List<String> selectedFilters;
+  const HomeMapPage({super.key, this.selectedFilters = const []}); 
 
   @override
   State<HomeMapPage> createState() => _HomeMapPageState();
@@ -66,14 +67,17 @@ class _HomeMapPageState extends State<HomeMapPage> {
         final loc = data['위치'] as Map<String, dynamic>? ?? {};
         final lat = loc['위도'] ?? 0.0;
         final lng = loc['경도'] ?? 0.0;
+        final Type = data['Crime Type'] ?? '유형없음';
         final name = data['name'] ?? '이름없음'; // 최상위에서 읽기
+        final Des = data['Description'] ?? '설명없음';
+        final OCTime = data['Time'] ?? '시간없음';
 
         print('Firestore name: $name'); // 값 확인
 
-        final crimeType = data['crimeType'] ?? 'Unknown';
+        final crimeType = data['crimeType'] ?? Type;
         final occurrenceLocation = data['occurrenceLocation'] ?? name;
-        final occurrenceTime = data['occurrenceTime'] ?? '';
-        final description = data['description'] ?? '';
+        final occurrenceTime = data['occurrenceTime'] ?? OCTime;
+        final description = data['description'] ?? Des;
 
         final marker = NMarker(
           id: doc.id,
