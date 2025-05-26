@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'crimedetail_ui.dart';
 
 Future<void> Logout() async {
   final googleSignIn = GoogleSignIn();
@@ -54,46 +55,56 @@ class _HomeMapPageState extends State<HomeMapPage> {
   }
 
   Future<void> loadMarkers() async {
-  try {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('map_marker')
-        .get();
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('map_marker').get();
 
-    Set<NMarker> markers = {};
+      Set<NMarker> markers = {};
 
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      if (!data.containsKey('위치')) continue;
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final loc = data['위치'] as Map<String, dynamic>? ?? {};
+        final lat = loc['위도'] ?? 0.0;
+        final lng = loc['경도'] ?? 0.0;
+        final name = data['name'] ?? '이름없음'; // 최상위에서 읽기
 
-      final loc = data['위치'];
-      final lat = loc['위도'];
-      final lng = loc['경도'];
-      final name = loc['이름'];
+        print('Firestore name: $name'); // 값 확인
 
-      final marker = NMarker(
-        id: doc.id,
-        position: NLatLng(lat, lng),
-      );
+        final crimeType = data['crimeType'] ?? 'Unknown';
+        final occurrenceLocation = data['occurrenceLocation'] ?? name;
+        final occurrenceTime = data['occurrenceTime'] ?? '';
+        final description = data['description'] ?? '';
 
-      // 마커 클릭 시 InfoWindow에 이름 표시
-      marker.setOnTapListener((NMarker marker) {
-        final infoWindow = NInfoWindow.onMarker(
-          id: marker.info.id,
-          text: name, // Firestore에서 읽은 이름
+        final marker = NMarker(
+          id: doc.id,
+          position: NLatLng(lat, lng),
         );
-        marker.openInfoWindow(infoWindow);
-      });
 
-      markers.add(marker);
+        marker.setOnTapListener((NMarker marker) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CrimeDetailPage(
+                crimeType: crimeType,
+                occurrenceLocation: occurrenceLocation,
+                occurrenceTime: occurrenceTime,
+                description: description,
+                latitude: lat,
+                longitude: lng,
+              ),
+            ),
+          );
+        });
+
+        markers.add(marker);
+      }
+
+      // 모든 마커를 한 번에 지도에 추가
+      mapController.addOverlayAll(markers);
+    } catch (e) {
+      debugPrint("마커 로딩 실패: $e");
     }
-
-    // 모든 마커를 한 번에 지도에 추가
-    mapController.addOverlayAll(markers);
-
-  } catch (e) {
-    debugPrint("마커 로딩 실패: $e");
   }
-}
 }
 
 Future<void> requestLocationPermission() async {
