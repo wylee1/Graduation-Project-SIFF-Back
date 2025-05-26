@@ -4,6 +4,7 @@ import 'test_ui.dart';
 import 'test1_ui.dart';
 import 'community_ui.dart';
 import 'usersetting_ui.dart';
+import 'message_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -36,13 +37,6 @@ class _MainScreenState extends State<MainScreen> {
   // 필터 선택 상태
   List<bool> _filterSelected = [];
 
-  // 각 아이템을 눌렀을 때 표시할 화면
-  final List<Widget> _pages = [
-    const Center(child: Text('Message Page', style: TextStyle(fontSize: 24))),
-    const HomeMapPage(),
-    const CommunityScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -69,10 +63,9 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: null, // 텍스트 제거
         backgroundColor: Colors.white30, // AppBar 색상
-        leadingWidth: 56, // 여백 제거 -> 0 이여서 반응이 없어서 56으로 바꿨습니다.
+        leadingWidth: 56,
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          // 관리자 권한 실행 확인
           onPressed: () async {
             debugPrint("press");
             try {
@@ -90,11 +83,9 @@ class _MainScreenState extends State<MainScreen> {
             } catch (e) {
               print("error $e");
             }
-            // 햄버거 메뉴 클릭 시 수행할 액션 추가
           },
         ),
         actions: [
-          // 검색 및 프로필 아이콘
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Container(
@@ -116,8 +107,6 @@ class _MainScreenState extends State<MainScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person),
-
-            // 프로필 클릭 시 UserSettingScreen으로 이동
             onPressed: () {
               Navigator.push(
                 context,
@@ -129,10 +118,17 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
 
+      // IndexedStack으로 각 화면의 상태를 유지
       body: Stack(
         children: [
-          _pages[_selectedIndex],
-
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              MessageScreen(),
+              const HomeMapPage(),
+              const CommunityScreen(),
+            ],
+          ),
           // Home 화면 (index == 1) 에서만 필터 섹션 보이도록 조건 설정
           if (_selectedIndex == 1)
             Positioned(
@@ -151,7 +147,6 @@ class _MainScreenState extends State<MainScreen> {
                       color: Colors.black,
                     ),
                   ),
-
                   // 확장된 필터들
                   if (_isFilterExpanded)
                     Expanded(
