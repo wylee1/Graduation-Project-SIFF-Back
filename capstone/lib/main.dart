@@ -12,8 +12,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await NaverMapSdk.instance.initialize(
-    clientId: '1bgj4skngh', 
-  );
+    clientId: '1bgj4skngh'  );
   await requestLocationPermission();
   runApp(const MyApp());
 }
