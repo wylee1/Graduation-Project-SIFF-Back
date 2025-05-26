@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_ui.dart';
 import 'home_back.dart';
 import 'test_ui.dart';
 import 'test1_ui.dart';
@@ -22,12 +21,16 @@ class _MainScreenState extends State<MainScreen> {
 
   // 아이콘과 함께하는 필터 유형 (색상 추가)
   final List<Map<String, dynamic>> _filterTypes = [
-    {'name': '방화', 'icon': Icons.local_fire_department, 'color': Colors.orange},
-    {'name': '폭행', 'icon': Icons.dangerous, 'color': Colors.blue},
-    {'name': '강도', 'icon': Icons.monetization_on, 'color': Colors.green},
-    {'name': '살인', 'icon': Icons.bloodtype, 'color': Colors.red},
-    {'name': '성폭력', 'icon': Icons.warning, 'color': Colors.purple},
-    {'name': '마약', 'icon': Icons.medication, 'color': Colors.teal},
+    {
+      'name': 'Arson',
+      'icon': Icons.local_fire_department,
+      'color': Colors.orange
+    },
+    {'name': 'Assault', 'icon': Icons.dangerous, 'color': Colors.blue},
+    {'name': 'Robbery', 'icon': Icons.monetization_on, 'color': Colors.green},
+    {'name': 'Murder', 'icon': Icons.bloodtype, 'color': Colors.red},
+    {'name': 'Sexual Violence', 'icon': Icons.warning, 'color': Colors.purple},
+    {'name': 'Drug', 'icon': Icons.medication, 'color': Colors.teal},
   ];
 
   // 필터 선택 상태
