@@ -43,7 +43,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
 # Flutter 관련 ignore
 build/
 .dart_tool/
@@ -90,3 +89,18 @@ windows/flutter/ephemeral/
 # 기타
 .idea/
 *.log
+
+# ===== Flutter 자동 생성 파일 및 플랫폼별 플러그인 등록 파일 =====
+
+# Android C++ 빌드 디렉토리
+android/app/.cxx/
+
+# Flutter 자동 생성 파일
+linux/flutter/generated_plugin_registrant.*
+linux/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.*
+windows/flutter/generated_plugins.cmake
+
+# 기타 빌드/캐시 파일
+build/
