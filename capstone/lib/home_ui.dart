@@ -48,26 +48,26 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white30,
         leadingWidth: 56,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: SizedBox(
-              width: 220,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
+        title: SizedBox(
+          width: 340,
+          height: 40,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Search...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
               ),
+              filled: true,
+              fillColor: Colors.grey[200],
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
           ),
+        ),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
+        actions: [
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () => Navigator.push(
@@ -145,12 +145,14 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-List<String> _getSelectedFilterNames() {
-  return List.generate(_filterTypes.length, (i) {
-    if (_filterSelected[i]) return _filterTypes[i]['name'] as String;
-    return null;
-  }).whereType<String>().toList();
-}
+
+  List<String> _getSelectedFilterNames() {
+    return List.generate(_filterTypes.length, (i) {
+      if (_filterSelected[i]) return _filterTypes[i]['name'] as String;
+      return null;
+    }).whereType<String>().toList();
+  }
+
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
