@@ -4,6 +4,7 @@ import 'community_ui.dart';
 import 'usersetting_ui.dart';
 import 'message_ui.dart';
 import 'report_ui.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,8 +16,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1;
   bool _isFilterExpanded = false;
+  NLatLng? lastCameraPosition;
 
-  final _filterTypes = [
+  final GlobalKey<HomeMapPageState> _mapKey = GlobalKey<HomeMapPageState>();
+
+  final List<Map<String, dynamic>> _filterTypes = [
     {
       'name': 'Arson',
       'icon': Icons.local_fire_department,
@@ -29,6 +33,7 @@ class _MainScreenState extends State<MainScreen> {
     {'name': 'Drug', 'icon': Icons.medication, 'color': Colors.teal},
   ];
   late List<bool> _filterSelected;
+  List<String> selectedFilters = [];
 
   @override
   void initState() {
@@ -38,8 +43,19 @@ class _MainScreenState extends State<MainScreen> {
 
   void _toggleFilterExpansion() =>
       setState(() => _isFilterExpanded = !_isFilterExpanded);
-  void _onFilterSelected(int idx) =>
-      setState(() => _filterSelected[idx] = !_filterSelected[idx]);
+
+  // 필터 선택 함수
+  void _onFilterSelected(int idx) {
+    setState(() {
+      _filterSelected[idx] = !_filterSelected[idx];
+      selectedFilters = List.generate(_filterTypes.length, (i) {
+        if (_filterSelected[i]) return _filterTypes[i]['name'] as String;
+        return null;
+      }).whereType<String>().toList();
+    });
+    // HomeMapPage의 마커 갱신
+    _mapKey.currentState?.loadMarkers();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +100,12 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               MessageScreen(),
               HomeMapPage(
-                key: ValueKey(_getSelectedFilterNames().join(',')),
-                selectedFilters: _getSelectedFilterNames(),
+                key: _mapKey, // GlobalKey 연결
+                selectedFilters: selectedFilters,
+                initialCameraPosition: lastCameraPosition,
+                onCameraIdle: (pos) {
+                  lastCameraPosition = pos;
+                },
               ),
               const CommunityScreen(),
             ],
@@ -144,13 +164,6 @@ class _MainScreenState extends State<MainScreen> {
         onTap: (idx) => setState(() => _selectedIndex = idx),
       ),
     );
-  }
-
-  List<String> _getSelectedFilterNames() {
-    return List.generate(_filterTypes.length, (i) {
-      if (_filterSelected[i]) return _filterTypes[i]['name'] as String;
-      return null;
-    }).whereType<String>().toList();
   }
 
   Widget _buildDrawer(BuildContext context) {

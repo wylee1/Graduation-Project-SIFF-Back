@@ -23,20 +23,22 @@ Future<bool> CheckUID() async {
 
 class HomeMapPage extends StatefulWidget {
   final List<String> selectedFilters;
-  const HomeMapPage({super.key, this.selectedFilters = const []}); 
+  final NLatLng? initialCameraPosition; // 1. 추가
+  final ValueChanged<NLatLng>? onCameraIdle; // 2. 추가
+
+  const HomeMapPage({
+    super.key,
+    this.selectedFilters = const [],
+    this.initialCameraPosition,
+    this.onCameraIdle,
+  });
 
   @override
-  State<HomeMapPage> createState() => _HomeMapPageState();
+  State<HomeMapPage> createState() => HomeMapPageState();
 }
 
-class _HomeMapPageState extends State<HomeMapPage> {
-  late NaverMapController mapController;
-
-  @override
-  void initState() {
-    super.initState();
-    requestLocationPermission();
-  }
+class HomeMapPageState extends State<HomeMapPage> {
+  NaverMapController? mapController;
 
   @override
   Widget build(BuildContext context) {
@@ -44,33 +46,55 @@ class _HomeMapPageState extends State<HomeMapPage> {
       body: NaverMap(
         options: const NaverMapViewOptions(
           indoorEnable: true,
-          locationButtonEnable: true,
+          locationButtonEnable: true, // 반드시 true로!
           consumeSymbolTapEvents: false,
         ),
+        onCameraIdle: () async {
+          if (mapController != null) {
+            final cameraPosition = await mapController!.getCameraPosition();
+            widget.onCameraIdle?.call(cameraPosition.target); // 3. 부모에 위치 전달
+          }
+        },
         onMapReady: (controller) {
           mapController = controller;
+          if (widget.initialCameraPosition != null) {
+            mapController!.updateCamera(
+              NCameraUpdate.scrollAndZoomTo(
+                target: widget.initialCameraPosition!,
+                zoom: 15,
+              ),
+            );
+          }
           loadMarkers();
         },
       ),
     );
   }
 
+  // 부모 위젯에서 필터가 변경될 때 호출할 수 있도록 함수 제공
+  void updateMarkers() {
+    loadMarkers();
+  }
+
   Future<void> loadMarkers() async {
+    if (mapController == null) return;
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('map_marker').get();
 
       Set<NMarker> markers = {};
-      mapController.clearOverlays();
+      mapController?.clearOverlays();
+
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final loc = data['위치'] as Map<String, dynamic>? ?? {};
         final lat = loc['위도'] ?? 0.0;
         final lng = loc['경도'] ?? 0.0;
         final Type = data['Crime Type'] ?? '유형없음';
-        if (widget.selectedFilters.isNotEmpty &&!widget.selectedFilters
-        .map((e) => e.toLowerCase())
-        .contains(Type.toString().toLowerCase())) {
+        if (widget.selectedFilters.isNotEmpty &&
+            !widget.selectedFilters
+                .map((e) => e.toLowerCase())
+                .contains(Type.toString().toLowerCase())) {
           continue;
         }
         final name = data['name'] ?? '이름없음'; // 최상위에서 읽기
@@ -109,7 +133,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
       }
 
       // 모든 마커를 한 번에 지도에 추가
-      mapController.addOverlayAll(markers);
+      mapController?.addOverlayAll(markers);
     } catch (e) {
       debugPrint("마커 로딩 실패: $e");
     }
