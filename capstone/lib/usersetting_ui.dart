@@ -12,8 +12,6 @@ class UserSettingScreen extends StatefulWidget {
 }
 
 class _UserSettingScreenState extends State<UserSettingScreen> {
-  int _selectedIndex = 1;
-
   // 언어 선택 상태 변수
   int _selectedLanguage = 0;
   final List<String> _languages = ['English', 'Korean', 'Chinese', 'Japanese'];
