@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.2.0   # 또는 pub.dev에서 최신 버전 확인 후 입력
+  fl_chart: ^0.68.0  # 차트 라이브러리
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
