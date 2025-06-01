@@ -5,6 +5,7 @@ import 'usersetting_ui.dart';
 import 'message_ui.dart';
 import 'report_ui.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'analytics_ui.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -78,8 +79,12 @@ class _MainScreenState extends State<MainScreen> {
             // 통계 아이콘 추가
             IconButton(
               icon: const Icon(Icons.equalizer),
-              onPressed: () {},
-              padding: const EdgeInsets.only(left: 0, right: 8), // 왼쪽 패딩 제거
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -88,10 +93,12 @@ class _MainScreenState extends State<MainScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const UserSettingScreen()),
-            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+              );
+            },
           ),
         ],
       ),
