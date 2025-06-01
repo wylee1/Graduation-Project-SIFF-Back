@@ -63,7 +63,26 @@ class _MainScreenState extends State<MainScreen> {
       drawer: _buildDrawer(context),
       appBar: AppBar(
         backgroundColor: Colors.white30,
-        leadingWidth: 56,
+        leadingWidth: 96, // 88에서 96으로 늘림
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 기존 햄버거 메뉴 (Drawer)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                padding: const EdgeInsets.only(left: 8, right: 0), // 오른쪽 패딩 제거
+              ),
+            ),
+            // 통계 아이콘 추가
+            IconButton(
+              icon: const Icon(Icons.equalizer),
+              onPressed: () {},
+              padding: const EdgeInsets.only(left: 0, right: 8), // 왼쪽 패딩 제거
+            ),
+          ],
+        ),
         centerTitle: true,
         scrolledUnderElevation: 0,
         actions: [
