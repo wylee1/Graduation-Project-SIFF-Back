@@ -139,7 +139,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crime Statistics Analysis'),
+        title: const Text(
+          'Crime Statistics Analysis',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white30,
         scrolledUnderElevation: 0,
       ),
