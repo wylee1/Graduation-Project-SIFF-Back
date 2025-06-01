@@ -69,22 +69,12 @@ class _UserSettingScreenState extends State<UserSettingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
+        title: const Text(
           'Settings',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        backgroundColor: Colors.white30,
+        scrolledUnderElevation: 0,
       ),
       body: SingleChildScrollView(
         child: Padding(
