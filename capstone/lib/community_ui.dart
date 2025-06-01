@@ -7,6 +7,22 @@ class CommunityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // FloatingActionButton 추가
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ReportUI()),
+          );
+        },
+        backgroundColor: Colors.black,
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat, // 우측 하단 위치
       body: Column(
         children: [
           Padding(
@@ -21,34 +37,7 @@ class CommunityScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                // 신고서 생성 버튼에 onTap 기능 추가
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ReportUI()),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const Icon(Icons.note_alt_outlined),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Create',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          Text(
-                            'New Incidence Report',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                // Create New Incident Report 버튼 제거됨
               ],
             ),
           ),
@@ -75,6 +64,8 @@ class CommunityScreen extends StatelessWidget {
                     Expanded(child: _buildPostCard('Arson', 'street.jpg', '')),
                   ],
                 ),
+                const SizedBox(
+                    height: 80), // FloatingActionButton과 겹치지 않도록 여백 추가
               ],
             ),
           ),
