@@ -71,6 +71,12 @@ flutter:
   assets:
     - assets/google.png
     - assets/SIFF_logo.png
+    - assets/arson.png
+    - assets/assault.png
+    - assets/drug.png
+    - assets/murder.png
+    - assets/robbery.png
+    - assets/sexual_violence.png
   # - images/
   #   - images/a_dot_ham.jpeg
 

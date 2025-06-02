@@ -9,6 +9,7 @@ class CommunityScreen extends StatelessWidget {
     return Scaffold(
       // FloatingActionButton 추가
       floatingActionButton: FloatingActionButton(
+        heroTag: "community_add_button", // 고유 태그
         onPressed: () {
           Navigator.push(
             context,

@@ -129,6 +129,7 @@ class _MainScreenState extends State<MainScreen> {
                   FloatingActionButton(
                     mini: true,
                     backgroundColor: Colors.white,
+                    heroTag: "home_filter_button", // 고유 태그
                     onPressed: _toggleFilterExpansion,
                     child: const Icon(Icons.filter_list, color: Colors.black),
                   ),
