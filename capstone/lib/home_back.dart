@@ -87,9 +87,11 @@ class HomeMapPageState extends State<HomeMapPage> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        final loc = data['위치'] as Map<String, dynamic>? ?? {};
-        final lat = loc['위도'] ?? 0.0;
-        final lng = loc['경도'] ?? 0.0;
+        final latRaw = data['위도'] ?? '0.0';
+        final lngRaw = data['경도'] ?? '0.0';
+
+        final lat = double.tryParse(latRaw.toString()) ?? 0.0;
+        final lng = double.tryParse(lngRaw.toString()) ?? 0.0;
         final Type = data['Crime Type'] ?? '유형없음';
         if (widget.selectedFilters.isNotEmpty &&
             !widget.selectedFilters
