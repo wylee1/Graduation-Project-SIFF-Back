@@ -39,6 +39,56 @@ class HomeMapPage extends StatefulWidget {
 
 class HomeMapPageState extends State<HomeMapPage> {
   NaverMapController? mapController;
+  Map<String, NOverlayImage> markerIcons = {};
+  bool isIconsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMarkerIcons();
+  }
+
+  Future<void> _loadMarkerIcons() async {
+    try {
+      // 검색 결과에 따라 initState에서 아이콘 미리 로딩
+      final iconPaths = {
+        'murder': 'assets/murder.png',
+        'arson': 'assets/arson.png',
+        'assault': 'assets/assault.png',
+        'robbery': 'assets/robbery.png',
+        'sexual violence': 'assets/sexual_violence.png',
+        'drug': 'assets/drug.png',
+      };
+
+      for (String crimeType in iconPaths.keys) {
+        try {
+          markerIcons[crimeType] =
+              await NOverlayImage.fromAssetImage(iconPaths[crimeType]!);
+          debugPrint("$crimeType 마커 아이콘 로딩 성공");
+        } catch (e) {
+          debugPrint("$crimeType 마커 아이콘 로딩 실패: $e");
+        }
+      }
+
+      setState(() {
+        isIconsLoaded = true;
+      });
+
+      // 아이콘 로딩 완료 후 마커 재로딩
+      if (mapController != null) {
+        loadMarkers();
+      }
+    } catch (e) {
+      debugPrint("마커 아이콘 로딩 실패: $e");
+      setState(() {
+        isIconsLoaded = true;
+      });
+    }
+  }
+
+  NOverlayImage? getMarkerIcon(String crimeType) {
+    return markerIcons[crimeType.toLowerCase()];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +96,13 @@ class HomeMapPageState extends State<HomeMapPage> {
       body: NaverMap(
         options: const NaverMapViewOptions(
           indoorEnable: true,
-          locationButtonEnable: true, // 반드시 true로!
+          locationButtonEnable: true,
           consumeSymbolTapEvents: false,
         ),
         onCameraIdle: () async {
           if (mapController != null) {
             final cameraPosition = await mapController!.getCameraPosition();
-            widget.onCameraIdle?.call(cameraPosition.target); // 3. 부모에 위치 전달
+            widget.onCameraIdle?.call(cameraPosition.target);
           }
         },
         onMapReady: (controller) {
@@ -65,13 +115,15 @@ class HomeMapPageState extends State<HomeMapPage> {
               ),
             );
           }
-          loadMarkers();
+          // 아이콘이 로딩되었으면 마커 로딩
+          if (isIconsLoaded) {
+            loadMarkers();
+          }
         },
       ),
     );
   }
 
-  // 부모 위젯에서 필터가 변경될 때 호출할 수 있도록 함수 제공
   void updateMarkers() {
     loadMarkers();
   }
@@ -93,26 +145,32 @@ class HomeMapPageState extends State<HomeMapPage> {
         final lat = double.tryParse(latRaw.toString()) ?? 0.0;
         final lng = double.tryParse(lngRaw.toString()) ?? 0.0;
         final Type = data['Crime Type'] ?? '유형없음';
+
         if (widget.selectedFilters.isNotEmpty &&
             !widget.selectedFilters
                 .map((e) => e.toLowerCase())
                 .contains(Type.toString().toLowerCase())) {
           continue;
         }
-        final name = data['name'] ?? '이름없음'; // 최상위에서 읽기
+
+        final name = data['name'] ?? '이름없음';
         final Des = data['Description'] ?? '설명없음';
         final OCTime = data['Time'] ?? '시간없음';
 
-        print('Firestore name: $name'); // 값 확인
+        print('Firestore name: $name');
 
         final crimeType = data['crimeType'] ?? Type;
         final occurrenceLocation = data['occurrenceLocation'] ?? name;
         final occurrenceTime = data['occurrenceTime'] ?? OCTime;
         final description = data['description'] ?? Des;
 
+        // 커스텀 아이콘 적용
+        final customIcon = getMarkerIcon(Type.toString());
+
         final marker = NMarker(
           id: doc.id,
           position: NLatLng(lat, lng),
+          icon: customIcon, // 커스텀 아이콘 사용 (null이면 기본 마커)
         );
 
         marker.setOnTapListener((NMarker marker) {
@@ -134,8 +192,8 @@ class HomeMapPageState extends State<HomeMapPage> {
         markers.add(marker);
       }
 
-      // 모든 마커를 한 번에 지도에 추가
       mapController?.addOverlayAll(markers);
+      debugPrint("마커 ${markers.length}개 로딩 완료");
     } catch (e) {
       debugPrint("마커 로딩 실패: $e");
     }
