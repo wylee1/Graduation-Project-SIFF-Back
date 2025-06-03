@@ -37,11 +37,33 @@ class HomeMapPage extends StatefulWidget {
   State<HomeMapPage> createState() => HomeMapPageState();
 }
 
+class MarkerData {
+  final String id;
+  final double lat;
+  final double lng;
+  final String crimeType;
+  final String name;
+  final String description;
+  final String time;
+
+  MarkerData({
+    required this.id,
+    required this.lat,
+    required this.lng,
+    required this.crimeType,
+    required this.name,
+    required this.description,
+    required this.time,
+  });
+}
+
 class HomeMapPageState extends State<HomeMapPage> {
   NaverMapController? mapController;
   Map<String, NOverlayImage> markerIcons = {};
   bool isIconsLoaded = false;
-
+  Map<String, List<MarkerData>> markerGroups = {};
+  String latLngKey(double lat, double lng) =>
+      "${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}";
   @override
   void initState() {
     super.initState();
@@ -135,8 +157,10 @@ class HomeMapPageState extends State<HomeMapPage> {
           await FirebaseFirestore.instance.collection('test').get();
 
       Set<NMarker> markers = {};
+      markerGroups.clear(); // 기존 그룹 초기화
       mapController?.clearOverlays();
 
+      // 1단계: 모든 마커 데이터 수집 및 그룹화
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final latRaw = data['위도'] ?? '0.0';
@@ -157,43 +181,102 @@ class HomeMapPageState extends State<HomeMapPage> {
         final Des = data['Description'] ?? '설명없음';
         final OCTime = data['Time'] ?? '시간없음';
 
-        print('Firestore name: $name');
-
         final crimeType = data['crimeType'] ?? Type;
         final occurrenceLocation = data['occurrenceLocation'] ?? name;
         final occurrenceTime = data['occurrenceTime'] ?? OCTime;
         final description = data['description'] ?? Des;
 
-        // 커스텀 아이콘 적용
-        final customIcon = getMarkerIcon(Type.toString());
-
-        final marker = NMarker(
+        // ✅ 마커 데이터 생성
+        final markerData = MarkerData(
           id: doc.id,
-          position: NLatLng(lat, lng),
-          icon: customIcon, // 커스텀 아이콘 사용 (null이면 기본 마커)
+          lat: lat,
+          lng: lng,
+          crimeType: crimeType,
+          name: occurrenceLocation,
+          description: description,
+          time: occurrenceTime,
         );
 
+        // 2단계: 그룹화 (클릭 시 사용)
+        final key = latLngKey(lat, lng);
+        markerGroups.putIfAbsent(key, () => []);
+
+        // 중복 체크 (동일 ID가 없을 때만 추가)
+        if (!markerGroups[key]!.any((existing) => existing.id == doc.id)) {
+          markerGroups[key]!.add(markerData);
+        }
+
+        // 3단계: 모든 마커 개별 생성
+        final customIcon = getMarkerIcon(crimeType);
+        final marker = NMarker(
+          id: doc.id, // 문서 ID를 고유 식별자로 사용
+          position: NLatLng(lat, lng),
+          icon: customIcon,
+        );
+
+        // 마커 클릭 리스너 (그룹 데이터 사용)
         marker.setOnTapListener((NMarker marker) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CrimeDetailPage(
-                crimeType: crimeType,
-                occurrenceLocation: occurrenceLocation,
-                occurrenceTime: occurrenceTime,
-                description: description,
-                latitude: lat,
-                longitude: lng,
+          final key =
+              latLngKey(marker.position.latitude, marker.position.longitude);
+          final relatedMarkers = markerGroups[key] ?? [];
+
+          if (relatedMarkers.length == 1) {
+            // 마커가 하나만 있으면 바로 상세 페이지로 이동
+            final data = relatedMarkers.first;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CrimeDetailPage(
+                  crimeType: data.crimeType,
+                  occurrenceLocation: data.name,
+                  occurrenceTime: data.time,
+                  description: data.description,
+                  latitude: data.lat,
+                  longitude: data.lng,
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            // 여러 개면 리스트(BottomSheet) 먼저 보여주기
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => Container(
+                color: Colors.white,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: relatedMarkers.map((data) {
+                    return ListTile(
+                      title: Text(data.crimeType),
+                      subtitle: Text("${data.name} / ${data.time}"),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CrimeDetailPage(
+                              crimeType: data.crimeType,
+                              occurrenceLocation: data.name,
+                              occurrenceTime: data.time,
+                              description: data.description,
+                              latitude: data.lat,
+                              longitude: data.lng,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          }
         });
 
         markers.add(marker);
       }
 
       mapController?.addOverlayAll(markers);
-      debugPrint("마커 ${markers.length}개 로딩 완료");
+      debugPrint("총 마커 ${markers.length}개 표시, 그룹 수: ${markerGroups.length}");
     } catch (e) {
       debugPrint("마커 로딩 실패: $e");
     }
