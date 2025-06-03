@@ -132,7 +132,7 @@ class HomeMapPageState extends State<HomeMapPage> {
     if (mapController == null) return;
     try {
       final snapshot =
-          await FirebaseFirestore.instance.collection('map_marker').get();
+          await FirebaseFirestore.instance.collection('test').get();
 
       Set<NMarker> markers = {};
       mapController?.clearOverlays();
