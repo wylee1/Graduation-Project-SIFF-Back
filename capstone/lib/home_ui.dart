@@ -29,7 +29,7 @@ class _MainScreenState extends State<MainScreen> {
     },
     {'name': 'Assault', 'icon': Icons.dangerous, 'color': Colors.blue},
     {'name': 'Robbery', 'icon': Icons.monetization_on, 'color': Colors.green},
-    {'name': 'Murder', 'icon': Icons.bloodtype, 'color': Colors.red},
+    {'name': 'Murder', 'icon': 'assets/swords.png', 'color': Colors.red},
     {'name': 'Sexual Violence', 'icon': Icons.warning, 'color': Colors.purple},
     {'name': 'Drug', 'icon': Icons.medication, 'color': Colors.teal},
   ];
@@ -144,7 +144,21 @@ class _MainScreenState extends State<MainScreen> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 4),
                               child: FilterChip(
-                                avatar: Icon(f['icon'] as IconData),
+                                avatar: f['icon'] is IconData
+                                    ? Icon(
+                                        f['icon'] as IconData,
+                                        color: Colors.black, // 모든 아이콘을 검정색으로
+                                      )
+                                    : SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: Image.asset(
+                                          f['icon'] as String,
+                                          color:
+                                              Colors.black, // 흑백 PNG라면 검정색 적용
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
                                 label: Text(f['name'] as String),
                                 selected: _filterSelected[i],
                                 onSelected: (_) => _onFilterSelected(i),
