@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'message_api.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({Key? key}) : super(key: key);
@@ -9,26 +10,20 @@ class MessageScreen extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   // 샘플 데이터 (API 연동 시 setState로 갱신)
-  List<Map<String, dynamic>> messages = [
-    {
-      'sender': 'Jongno-gu',
-      'time': 'now',
-      'content':
-          'Earthquake disaster training message has been delivered.\nThis is a training message. It is not a real situation.\nThis is an error that occurred during the process of delivering a training message, not a real earthquake situation. We will fix it.',
-    },
-    {
-      'sender': 'Forestry Service',
-      'time': '3 hours ago',
-      'content':
-          "Today at 9 p.m., a landslide crisis warning level 'Caution' has been issued in Seoul and other areas.\nResidents and visitors in landslide-prone areas, etc. are requested to evacuate to a safe place in case of emergency.",
-    },
-    {
-      'sender': 'Seoul Metropolitan Government',
-      'time': '7 hours ago',
-      'content':
-          "Currently, an emergency accident has occurred in front ...", // 예시
-    },
-  ];
+  List<Map<String, dynamic>> messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDisasterMessages();
+  }
+
+  Future<void> _loadDisasterMessages() async {
+    final fetchedMessages = await fetchDisasterMessages();
+    setState(() {
+      messages = fetchedMessages;
+    });
+  }
 
   // 메시지 삭제 함수
   void _removeMessage(int index) {
