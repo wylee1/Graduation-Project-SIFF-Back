@@ -1,6 +1,32 @@
 import 'package:flutter/material.dart';
 import 'report_ui.dart'; // ReportUI 가져오기
+import 'translation_service.dart';
+class PostTile extends StatelessWidget {
+  const PostTile({super.key, required this.post});
+  final Map<String, dynamic> post;
 
+  @override
+  Widget build(BuildContext context) {
+    final title = (post['title'] ?? '') as String;
+    final body  = (post['body']  ?? '') as String;
+    final src   = (post['lang']  ?? 'ko') as String;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TranslatedText(title, source: src, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            TranslatedText(body, source: src, maxLines: 4, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+}
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({Key? key}) : super(key: key);
 

@@ -5,6 +5,8 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'crimedetail_ui.dart';
+import 'app_language.dart';
+import 'translation_service.dart';
 
 Future<void> Logout() async {
   final googleSignIn = GoogleSignIn();
@@ -61,9 +63,12 @@ class HomeMapPageState extends State<HomeMapPage> {
   NaverMapController? mapController;
   Map<String, NOverlayImage> markerIcons = {};
   bool isIconsLoaded = false;
+
+  // 같은 좌표의 마커들을 묶어서 보관
   Map<String, List<MarkerData>> markerGroups = {};
   String latLngKey(double lat, double lng) =>
       "${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}";
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +77,6 @@ class HomeMapPageState extends State<HomeMapPage> {
 
   Future<void> _loadMarkerIcons() async {
     try {
-      // 검색 결과에 따라 initState에서 아이콘 미리 로딩
       final iconPaths = {
         'murder': 'assets/murder.png',
         'arson': 'assets/arson.png',
@@ -96,7 +100,6 @@ class HomeMapPageState extends State<HomeMapPage> {
         isIconsLoaded = true;
       });
 
-      // 아이콘 로딩 완료 후 마커 재로딩
       if (mapController != null) {
         loadMarkers();
       }
@@ -115,32 +118,48 @@ class HomeMapPageState extends State<HomeMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NaverMap(
-        options: const NaverMapViewOptions(
-          indoorEnable: true,
-          locationButtonEnable: true,
-          consumeSymbolTapEvents: false,
-        ),
-        onCameraIdle: () async {
-          if (mapController != null) {
-            final cameraPosition = await mapController!.getCameraPosition();
-            widget.onCameraIdle?.call(cameraPosition.target);
-          }
-        },
-        onMapReady: (controller) {
-          mapController = controller;
-          if (widget.initialCameraPosition != null) {
-            mapController!.updateCamera(
-              NCameraUpdate.scrollAndZoomTo(
-                target: widget.initialCameraPosition!,
-                zoom: 15,
-              ),
-            );
-          }
-          // 아이콘이 로딩되었으면 마커 로딩
-          if (isIconsLoaded) {
-            loadMarkers();
-          }
+      body: ValueListenableBuilder<MapLanguage>(
+        valueListenable: mapLanguageNotifier,
+        builder: (context, lang, _) {
+          final nLocale = naverLocaleFrom(lang);
+          final naverOptions = (nLocale == null)
+              ? const NaverMapViewOptions(
+                  indoorEnable: true,
+                  locationButtonEnable: true,
+                  consumeSymbolTapEvents: false,
+                )
+              : NaverMapViewOptions(
+                  indoorEnable: true,
+                  locationButtonEnable: true,
+                  consumeSymbolTapEvents: false,
+                  locale: nLocale,
+                );
+          return NaverMap(
+            key: ValueKey('navermap-${lang.name}'),
+            options: naverOptions,
+            onCameraIdle: () async {
+              if (mapController != null) {
+                final cameraPosition = await mapController!.getCameraPosition();
+                widget.onCameraIdle?.call(cameraPosition.target);
+              }
+            },
+            onMapReady: (controller) {
+              mapController = controller;
+
+              if (widget.initialCameraPosition != null) {
+                mapController!.updateCamera(
+                  NCameraUpdate.scrollAndZoomTo(
+                    target: widget.initialCameraPosition!,
+                    zoom: 15,
+                  ),
+                );
+              }
+
+              if (isIconsLoaded) {
+                loadMarkers();
+              }
+            },
+          );
         },
       ),
     );
@@ -154,13 +173,12 @@ class HomeMapPageState extends State<HomeMapPage> {
     if (mapController == null) return;
     try {
       final snapshot =
-          await FirebaseFirestore.instance.collection('test').get();
+          await FirebaseFirestore.instance.collection('map_marker').get();
 
       Set<NMarker> markers = {};
-      markerGroups.clear(); // 기존 그룹 초기화
+      markerGroups.clear();
       mapController?.clearOverlays();
 
-      // 1단계: 모든 마커 데이터 수집 및 그룹화
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final latRaw = data['위도'] ?? '0.0';
@@ -186,7 +204,6 @@ class HomeMapPageState extends State<HomeMapPage> {
         final occurrenceTime = data['occurrenceTime'] ?? OCTime;
         final description = data['description'] ?? Des;
 
-        // ✅ 마커 데이터 생성
         final markerData = MarkerData(
           id: doc.id,
           lat: lat,
@@ -197,79 +214,22 @@ class HomeMapPageState extends State<HomeMapPage> {
           time: occurrenceTime,
         );
 
-        // 2단계: 그룹화 (클릭 시 사용)
         final key = latLngKey(lat, lng);
         markerGroups.putIfAbsent(key, () => []);
-
-        // 중복 체크 (동일 ID가 없을 때만 추가)
         if (!markerGroups[key]!.any((existing) => existing.id == doc.id)) {
           markerGroups[key]!.add(markerData);
         }
 
-        // 3단계: 모든 마커 개별 생성
         final customIcon = getMarkerIcon(crimeType);
         final marker = NMarker(
-          id: doc.id, // 문서 ID를 고유 식별자로 사용
+          id: doc.id,
           position: NLatLng(lat, lng),
           icon: customIcon,
         );
 
-        // 마커 클릭 리스너 (그룹 데이터 사용)
-        marker.setOnTapListener((NMarker marker) {
-          final key =
-              latLngKey(marker.position.latitude, marker.position.longitude);
-          final relatedMarkers = markerGroups[key] ?? [];
-
-          if (relatedMarkers.length == 1) {
-            // 마커가 하나만 있으면 바로 상세 페이지로 이동
-            final data = relatedMarkers.first;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CrimeDetailPage(
-                  crimeType: data.crimeType,
-                  occurrenceLocation: data.name,
-                  occurrenceTime: data.time,
-                  description: data.description,
-                  latitude: data.lat,
-                  longitude: data.lng,
-                ),
-              ),
-            );
-          } else {
-            // 여러 개면 리스트(BottomSheet) 먼저 보여주기
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => Container(
-                color: Colors.white,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: relatedMarkers.map((data) {
-                    return ListTile(
-                      title: Text(data.crimeType),
-                      subtitle: Text("${data.name} / ${data.time}"),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CrimeDetailPage(
-                              crimeType: data.crimeType,
-                              occurrenceLocation: data.name,
-                              occurrenceTime: data.time,
-                              description: data.description,
-                              latitude: data.lat,
-                              longitude: data.lng,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            );
-          }
+        // 👉 별도 핸들러로 분리 (번역 → 시트 출력)
+        marker.setOnTapListener((NMarker m) {
+          _handleMarkerTap(m);
         });
 
         markers.add(marker);
@@ -280,6 +240,98 @@ class HomeMapPageState extends State<HomeMapPage> {
     } catch (e) {
       debugPrint("마커 로딩 실패: $e");
     }
+  }
+
+  // ====== 여기서부터: 겹친 마커 번역 + 시트 출력 ======
+  Future<void> _handleMarkerTap(NMarker marker) async {
+    final key = latLngKey(marker.position.latitude, marker.position.longitude);
+    final related = markerGroups[key] ?? [];
+
+    if (related.isEmpty) return;
+
+    if (related.length == 1) {
+      final d = related.first;
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CrimeDetailPage(
+            crimeType: d.crimeType,
+            occurrenceLocation: d.name,
+            occurrenceTime: d.time,
+            description: d.description,
+            latitude: d.lat,
+            longitude: d.lng,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 여러 개면 번역 후 시트로 표시
+    await _showOverlappedMarkersSheetTranslated(related);
+  }
+
+  Future<void> _showOverlappedMarkersSheetTranslated(List<MarkerData> items) async {
+    // 1) 원문 배열 만들기 (제목: crimeType, 부제목: description(or name) + time)
+    final titles = <String>[];
+    final subs   = <String>[];
+    for (final d in items) {
+      titles.add(d.crimeType);
+      final main = (d.description.isNotEmpty ? d.description : d.name);
+      subs.add('$main / ${d.time}');
+    }
+
+    // 2) 한 번의 호출로 모두 번역 (성능/요금 절약)
+    final outs = await translateMany(
+      texts: [...titles, ...subs],
+      source: 'auto',
+      to: mapLanguageNotifier.value,
+    );
+    final tTitles = outs.sublist(0, titles.length);
+    final tSubs   = outs.sublist(titles.length);
+
+    if (!mounted) return;
+
+    // 3) 번역된 문자열로 바텀시트 출력
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => ListView.separated(
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (_, i) {
+          final d = items[i];
+          return ListTile(
+            title: Text(
+              tTitles[i],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              tSubs[i],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CrimeDetailPage(
+                    crimeType: d.crimeType,
+                    occurrenceLocation: d.name,
+                    occurrenceTime: d.time,
+                    description: d.description,
+                    latitude: d.lat,
+                    longitude: d.lng,
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }
 

@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'home_back.dart';
-import 'login_ui.dart'; // LoginScreen을 사용하려면 import가 필요합니다.
-
+import 'login_ui.dart'; // LoginScreen을 사용하려면 import가 필요합니다.z
+import 'app_language.dart';
+import 'translation_service.dart';
+import 'papago_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 바인딩 초기화 (권장)z
   
@@ -14,6 +16,7 @@ Future<void> main() async {
   await NaverMapSdk.instance.initialize(
     clientId: '1bgj4skngh'  );
   await requestLocationPermission();
+  await initSavedMapLanguage();
   runApp(const MyApp());
 }
 
@@ -22,9 +25,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginScreen(), // LoginScreen을 정상적으로 인식할 수 있음
+    return ValueListenableBuilder<MapLanguage>(
+      valueListenable: mapLanguageNotifier,
+      builder: (context, lang, _) {
+        final appLocale = flutterLocaleFrom(lang); // null이면 시스템 로케일
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: appLocale, // 원치 않으면 이 줄 삭제
+          home: const LoginScreen(),
+        );
+      },
     );
   }
 }

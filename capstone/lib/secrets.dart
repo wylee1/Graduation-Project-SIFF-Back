@@ -1,0 +1,1 @@
+const googleTranslateApiKey = 'AIzaSyCsCU7ycuJHlHhF6cuE1R4cHoXtWL-ZLy4';
