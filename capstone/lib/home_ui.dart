@@ -6,6 +6,9 @@ import 'message_ui.dart';
 import 'report_ui.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'analytics_ui.dart';
+import 'app_language.dart';
+import 'localizedtext.dart';
+import 'translation_service.dart' show translateText;
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -36,11 +39,43 @@ class _MainScreenState extends State<MainScreen> {
   late List<bool> _filterSelected;
   List<String> selectedFilters = [];
 
+  String _labelMessage = 'MESSAGE';
+  String _labelHome = 'HOME';
+  String _labelCommunity = 'COMMUNITY';
+  
+
   @override
   void initState() {
     super.initState();
     _filterSelected = List.filled(_filterTypes.length, false);
+    _translateNavLabels();
+    mapLanguageNotifier.addListener(_onLanguageChanged);
   }
+
+  @override
+  void dispose() {
+    mapLanguageNotifier.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+  _translateNavLabels(); // MESSAGE/HOME/COMMUNITY 라벨 다시 번역
+  if (mounted) setState(() {});
+}
+
+  Future<void> _translateNavLabels() async {
+  final lang = mapLanguageNotifier.value;
+  final m = await translateText('MESSAGE', source: 'en', to: lang);
+  final h = await translateText('HOME',    source: 'en', to: lang);
+  final c = await translateText('COMMUNITY', source: 'en', to: lang);
+
+  if (!mounted) return;
+  setState(() {
+    _labelMessage   = m;
+    _labelHome      = h;
+    _labelCommunity = c;
+  });
+}
 
   void _toggleFilterExpansion() =>
       setState(() => _isFilterExpanded = !_isFilterExpanded);
@@ -180,62 +215,61 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.warning), label: 'MESSAGE'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'HOME'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'COMMUNITY'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.warning), label: _labelMessage),
+          BottomNavigationBarItem(icon: const Icon(Icons.home),    label: _labelHome),
+          BottomNavigationBarItem(icon: const Icon(Icons.people),  label: _labelCommunity),
         ],
         onTap: (idx) => setState(() => _selectedIndex = idx),
       ),
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
+   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           const SizedBox(height: 40),
-          _drawerItem('• Home', () {
+
+          _drawerItem(const LocalizedText(original: '• Home'), () {
             setState(() => _selectedIndex = 1);
             Navigator.pop(context);
           }, bold: true),
-          _drawerItem('• Emergency Disaster Message', () {
+
+          _drawerItem(const LocalizedText(original: '• Emergency Disaster Message'), () {
             setState(() => _selectedIndex = 0);
             Navigator.pop(context);
           }),
-          _drawerItem('• Community', () {
+
+          _drawerItem(const LocalizedText(original: '• Community'), () {
             setState(() => _selectedIndex = 2);
             Navigator.pop(context);
           }),
+
           Padding(
             padding: const EdgeInsets.only(left: 24),
-            child: _drawerItem('· Incident Report', () {
+            child: _drawerItem(const LocalizedText(original: '· Incident Report'), () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReportUI()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportUI()));
             }),
           ),
-          _drawerItem('• Settings', () {
+
+          _drawerItem(const LocalizedText(original: '• Settings'), () {
             Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const UserSettingScreen()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const UserSettingScreen()));
           }),
         ],
       ),
     );
   }
 
-  Widget _drawerItem(String title, VoidCallback onTap, {bool bold = false}) {
+  // label을 Widget으로 받아서 LocalizedText 사용 가능하도록 변경
+  Widget _drawerItem(Widget label, VoidCallback onTap, {bool bold = false}) {
     return ListTile(
-      title: Text(
-        title,
-        style:
-            TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+      title: DefaultTextStyle.merge(
+        style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+        child: label,
       ),
       onTap: onTap,
     );

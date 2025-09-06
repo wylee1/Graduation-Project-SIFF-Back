@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'message_api.dart';
+import 'translation_service.dart';
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({Key? key}) : super(key: key);
@@ -7,7 +8,34 @@ class MessageScreen extends StatefulWidget {
   @override
   State<MessageScreen> createState() => _MessageScreenState();
 }
+class MessageList extends StatelessWidget {
+  const MessageList({super.key, required this.messages});
+  final List<Map<String, dynamic>> messages;
 
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: messages.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (_, i) {
+        final m = messages[i];
+        final sender  = (m['sender']  ?? '') as String;
+        final content = (m['content'] ?? '') as String; // 원문(ko) 가정
+
+        return ListTile(
+          title: Text(sender),
+          subtitle: TranslatedText(
+            content,
+            source: 'ko', // 원문 언어(필요 시 변경/감지)
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+          ),
+          dense: true,
+        );
+      },
+    );
+  }
+}
 class _MessageScreenState extends State<MessageScreen> {
   // 샘플 데이터 (API 연동 시 setState로 갱신)
   List<Map<String, dynamic>> messages = [];
@@ -133,8 +161,12 @@ class _MessageScreenState extends State<MessageScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
+            TranslatedText(
               content,
+              source: 'ko', // 재난문자 원문이 한국어라고 가정
+              // 필요하면 줄 수 제한/ellipsis 추가 가능:
+              // maxLines: 6,
+              // overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 14),
             ),
           ],

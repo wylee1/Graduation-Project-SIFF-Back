@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'localizedtext.dart';
 
 class CrimeDetailPage extends StatelessWidget {
   final String crimeType;
@@ -56,7 +57,7 @@ class CrimeDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: const LocalizedText(original:
           'Crime Information',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -92,35 +93,35 @@ class CrimeDetailPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              const LocalizedText(original:
                 'Details',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 12),
               ListTile(
                 leading: const Icon(Icons.warning),
-                title: const Text('Crime Type'),
-                subtitle: Text(crimeType),
+                title: const LocalizedText(original:'Crime Type'),
+                subtitle: LocalizedText(original:crimeType),
               ),
               ListTile(
                 leading: const Icon(Icons.location_on),
-                title: const Text('Occurrence Location'),
-                subtitle: Text(occurrenceLocation),
+                title: const LocalizedText(original:'Occurrence Location'),
+                subtitle: LocalizedText(original:occurrenceLocation),
               ),
               ListTile(
                 leading: const Icon(Icons.access_time),
-                title: const Text('Occurrence Time'),
-                subtitle: Text(occurrenceTime),
+                title: const LocalizedText(original:'Occurrence Time'),
+                subtitle: LocalizedText(original:occurrenceTime),
               ),
               ListTile(
                 leading: const Icon(Icons.description),
-                title: const Text('💡AI Description'),
-                subtitle: Text(description),
+                title: const LocalizedText(original:'💡AI Description'),
+                subtitle: LocalizedText(original:description),
               ),
               const SizedBox(height: 24),
 
               // 뉴스 링크 섹션 추가
-              const Text(
+              const LocalizedText(original:
                 'Related News & Information',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
@@ -133,7 +134,7 @@ class CrimeDetailPage extends StatelessWidget {
                         child: ListTile(
                           leading:
                               const Icon(Icons.article, color: Colors.orange),
-                          title: Text(
+                          title: LocalizedText(original:
                             news['title']!,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
@@ -142,7 +143,7 @@ class CrimeDetailPage extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: Text(
+                          subtitle: LocalizedText(original:
                             news['source']!,
                             style: TextStyle(
                               color: Colors.grey[600],
@@ -169,7 +170,7 @@ class CrimeDetailPage extends StatelessWidget {
                         children: [
                           Icon(Icons.security, color: Colors.amber.shade700),
                           const SizedBox(width: 8),
-                          Text(
+                          LocalizedText(original:
                             'Safety Tips',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -180,7 +181,7 @@ class CrimeDetailPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      const LocalizedText(original:
                         '• Stay aware of your surroundings\n'
                         '• Report suspicious activities to authorities\n'
                         '• Use well-lit and populated routes\n'

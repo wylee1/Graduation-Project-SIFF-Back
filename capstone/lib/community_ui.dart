@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'report_ui.dart';
 import 'report_admin_ui.dart';
+import 'translation_service.dart';
 
 // 관리자 UID 리스트
 final List<String> adminUids = [
