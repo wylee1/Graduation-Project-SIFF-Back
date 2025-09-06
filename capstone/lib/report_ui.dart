@@ -1,23 +1,232 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ReportUI extends StatefulWidget {
   const ReportUI({Key? key}) : super(key: key);
 
   @override
-  _ReportUIState createState() => _ReportUIState();
+  State<ReportUI> createState() => _ReportUIState();
 }
 
 class _ReportUIState extends State<ReportUI> {
+  String? _selectedCrimeType;
+  final List<String> _crimeTypes = [
+    'Arson',
+    'Assault',
+    'Robbery',
+    'Murder',
+    'Sexual Violence',
+    'Drug',
+    'Etc',
+  ];
+
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _regionController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+
+  File? _pickedImage;
+  bool _isSubmitting = false;
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadImage(File imageFile) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+      final fileName =
+          'reports/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+
+      final uploadTask = ref.putFile(imageFile);
+      final snapshot = await uploadTask;
+
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Image upload error: $e');
+      return null;
+    }
+  }
+
+  Future<void> _submitReport() async {
+    if (_selectedCrimeType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a crime type')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      String? imageUrl;
+      if (_pickedImage != null) {
+        imageUrl = await _uploadImage(_pickedImage!);
+        if (imageUrl == null || imageUrl.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image upload failed. Please try again.')),
+          );
+          setState(() {
+            _isSubmitting = false;
+          });
+          return; // 이미지 업로드 실패시 제출 중단
+        }
+      }
+
+      final user = FirebaseAuth.instance.currentUser;
+      final email = user?.email ?? '';
+      final writerName = email.contains('@') ? email.split('@')[0] : '';
+
+      await FirebaseFirestore.instance.collection('report_community').add({
+        'title': _titleController.text.trim(),
+        'incidentType': _selectedCrimeType!,
+        'occurDate': _dateController.text.trim(),
+        'occurTime': _timeController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'location': _addressController.text.trim(),
+        'regionName': _regionController.text.trim(),
+        'imageUrl': imageUrl ?? '',
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'writerId': user?.uid ?? '',
+        'writerName': writerName, // 자동으로 작성자 이메일 아이디 저장
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Report submitted successfully.'),
+        ),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting report: $e')),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  // 발생일 달력 선택 위젯
+  Widget _buildDatePickerField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: _dateController,
+        keyboardType: TextInputType.datetime,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: "Date of Occurrence",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () async {
+              final pickedDate = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+              );
+              if (pickedDate != null) {
+                final formattedDate =
+                    "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                setState(() {
+                  _dateController.text = formattedDate;
+                });
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 발생 시간 선택 위젯
+  Widget _buildTimePickerField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: _timeController,
+        keyboardType: TextInputType.datetime,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: "Time of Occurrence",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.access_time),
+            onPressed: () async {
+              final pickedTime = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+              );
+              if (pickedTime != null) {
+                final formattedTime = pickedTime.format(context);
+                setState(() {
+                  _timeController.text = formattedTime;
+                });
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label,
+      {TextInputType? keyboardType}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    _timeController.dispose();
+    _descriptionController.dispose();
+    _addressController.dispose();
+    _regionController.dispose();
+    _titleController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            'Create New Incident Report',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+        title: const Text(
+          'Create New Report',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white30,
         scrolledUnderElevation: 0,
@@ -26,188 +235,89 @@ class _ReportUIState extends State<ReportUI> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Divider(height: 1, thickness: 1),
+            // Crime Type Dropdown
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Incident Description",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField("Crime Type:"),
-                  const SizedBox(height: 12),
-                  _buildTextField("Occurrence Date:"),
-                  const SizedBox(height: 12),
-                  _buildTextField("Occurrence Time:"),
-                  const SizedBox(height: 12),
-                  _buildTextField("Brief Description:"),
-                  const SizedBox(height: 12),
-                  _buildTextField("Brief Address:"),
-                  const SizedBox(height: 20),
-
-                  // 사진 업로드 영역
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Photo Upload Area",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.circle, size: 8, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Icon(Icons.circle, size: 8, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Icon(Icons.circle, size: 8, color: Colors.grey),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 위치 정보 영역
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: double.infinity,
-                      height: 150,
-                      color: Colors.grey[200],
-                      child: Stack(
-                        children: [
-                          // 지도 그리드 패턴 표현
-                          CustomPaint(
-                            size: const Size(double.infinity, 150),
-                            painter: GridPainter(),
-                          ),
-                          // 마커 아이콘
-                          const Center(
-                            child: Icon(
-                              Icons.location_on,
-                              color: Colors.grey,
-                              size: 32,
-                            ),
-                          ),
-                          // 위치 정보 텍스트
-                          Positioned(
-                            bottom: 10,
-                            left: 0,
-                            right: 0,
-                            child: const Center(
-                              child: Text(
-                                "Location Information",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 제출 버튼
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Sumit Incident Report",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: "Crime Type",
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                value: _selectedCrimeType,
+                items: _crimeTypes.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedCrimeType = val;
+                  });
+                },
               ),
             ),
+
+            _buildDatePickerField(),
+            _buildTimePickerField(),
+            _buildTextField(_titleController, "Title"),
+            _buildTextField(_descriptionController, "Brief Description"),
+            _buildTextField(_addressController, "Address"),
+            _buildTextField(_regionController, "Region"),
+
+            const SizedBox(height: 16),
+
+            // 이미지 업로드 영역
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: double.infinity,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: _pickedImage == null
+                      ? const Center(
+                          child: Text('Tap to select an image'),
+                        )
+                      : Image.file(
+                          _pickedImage!,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitReport,
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Submit Report'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildTextField(String hintText) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey.shade500),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-}
-
-// CheckUID와 Logout 함수 추가 (MainScreen에서 사용하는 함수)
-Future<int> CheckUID() async {
-  // 여기에 실제 사용자 권한 확인 로직 구현
-  // 임시로 1을 반환하도록 설정
-  await Future.delayed(Duration(milliseconds: 500)); // 비동기 동작 시뮬레이션
-  return 1;
-}
-
-Future<void> Logout() async {
-  // 로그아웃 로직 구현
-  await Future.delayed(Duration(milliseconds: 500)); // 비동기 동작 시뮬레이션
-  print("Logged out successfully");
-}
-
-// 지도 그리드 패턴을 그리기 위한 CustomPainter
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.5)
-      ..strokeWidth = 1;
-
-    // 대각선 그리드 그리기
-    for (double i = -size.height * 2; i <= size.width * 2; i += 40) {
-      canvas.drawLine(
-          Offset(i, 0), Offset(i + size.height, size.height), paint);
-      canvas.drawLine(
-          Offset(i, size.height), Offset(i + size.height, 0), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }
