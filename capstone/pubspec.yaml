@@ -33,10 +33,6 @@ dependencies:
   shared_preferences: ^2.2.0   # 또는 pub.dev에서 최신 버전 확인 후 입력
   fl_chart: ^0.68.0  # 차트 라이브러리
   url_launcher: ^6.2.2 # 뉴스 url 넣을 수 있는 라이브러리
-  flutter_localizations:
-    sdk: flutter
-  provider: ^6.1.2
-
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
