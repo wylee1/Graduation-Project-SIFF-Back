@@ -320,8 +320,4 @@ class _ReportUIState extends State<ReportUI> {
       ),
     );
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 51cf02f248c1b6bbe042457f403d2a4e7ac953b1

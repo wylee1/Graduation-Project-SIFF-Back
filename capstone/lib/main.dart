@@ -6,7 +6,6 @@ import 'home_back.dart';
 import 'login_ui.dart'; // LoginScreen을 사용하려면 import가 필요합니다.z
 import 'app_language.dart';
 import 'translation_service.dart';
-import 'papago_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 바인딩 초기화 (권장)z
   
