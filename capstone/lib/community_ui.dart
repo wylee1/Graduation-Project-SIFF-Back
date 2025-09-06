@@ -33,7 +33,80 @@ class CommunityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool admin = isAdminUser();
 
+    final bool admin = isAdminUser();
+
     return Scaffold(
+      floatingActionButton: admin
+          ? FloatingActionButton(
+              heroTag: "admin_approval_button",
+              backgroundColor: Colors.red,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminApprovalPage()),
+                );
+              },
+              child: const Icon(Icons.admin_panel_settings),
+            )
+          : FloatingActionButton(
+              heroTag: "community_add_button",
+              backgroundColor: Colors.white,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportUI()),
+                );
+              },
+              child: const Icon(Icons.add),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      body: StreamBuilder<QuerySnapshot>(
+        stream: getCommunityReportsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('data loading error'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final docs = snapshot.data!.docs;
+          if (docs.isEmpty) {
+            return const Center(child: Text('There is no post.'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              final docId = docs[index].id;
+              // 안전하게 Timestamp -> DateTime 변환
+              DateTime createdAt;
+              final raw = data['createdAt'];
+              if (raw is Timestamp) {
+                createdAt = raw.toDate();
+              } else if (raw is DateTime) {
+                createdAt = raw;
+              } else {
+                createdAt = DateTime.now();
+              }
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PostDetailPage(post: {
+                        ...data,
+                        'createdAt': createdAt,
+                      }),
+                    ),
+                  );
+                },
+                child: _buildPostCard(data, docId, createdAt),
+              );
+            },
+          );
+        },
       floatingActionButton: admin
           ? FloatingActionButton(
               heroTag: "admin_approval_button",
@@ -121,9 +194,46 @@ class CommunityScreen extends StatelessWidget {
     String occurDate = data['occurDate'] ?? '';
     String occurTime = data['occurTime'] ?? '';
 
+  Widget _buildPostCard(
+      Map<String, dynamic> data, String docId, DateTime createdAt) {
+    String incidentType = data['incidentType'] ?? '';
+    String imageUrl = data['imageUrl'] ?? '';
+    String title = data['title'] ?? '';
+    String description = data['description'] ?? '';
+    String location = data['location'] ?? '';
+    String regionName = data['regionName'] ?? '';
+    String writerName = data['writerName'] ?? '';
+    String occurDate = data['occurDate'] ?? '';
+    String occurTime = data['occurTime'] ?? '';
+
     Color backgroundColor = Colors.blue;
     IconData icon = Icons.info;
 
+    switch (incidentType) {
+      case 'Arson':
+        backgroundColor = Colors.orange;
+        icon = Icons.local_fire_department;
+        break;
+      case 'Assault':
+        backgroundColor = Colors.blue;
+        icon = Icons.emergency;
+        break;
+      case 'Robbery':
+        backgroundColor = Colors.grey;
+        icon = Icons.money_off;
+        break;
+      case 'Murder':
+        backgroundColor = Colors.red;
+        icon = Icons.dangerous;
+        break;
+      case 'Sexual Violence':
+        backgroundColor = Colors.purple;
+        icon = Icons.warning;
+        break;
+      case 'Drug':
+        backgroundColor = Colors.teal;
+        icon = Icons.medication;
+        break;
     switch (incidentType) {
       case 'Arson':
         backgroundColor = Colors.orange;
@@ -162,8 +272,26 @@ class CommunityScreen extends StatelessWidget {
               ClipRRect(
                 borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+                    topLeft: Radius.circular(8), topRight: Radius.circular(8)),
                 child: AspectRatio(
                   aspectRatio: 3 / 2,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            color: Colors.grey.shade300,
+                            child: const Center(
+                              child: Text('Image not available'),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          height: 100,
+                          color: Colors.grey.shade300,
+                          child: const Center(child: Text('No image')),
+                        ),
                   child: imageUrl.isNotEmpty
                       ? Image.network(
                           imageUrl,
@@ -211,9 +339,18 @@ class CommunityScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13)),
                 Text(title,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 14)),
@@ -228,9 +365,17 @@ class CommunityScreen extends StatelessWidget {
                     const Icon(Icons.location_on, size: 12),
                     const SizedBox(width: 4),
                     Text(regionName, style: const TextStyle(fontSize: 12)),
+                  children: [
+                    const Icon(Icons.location_on, size: 12),
+                    const SizedBox(width: 4),
+                    Text(regionName, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
                 Row(
+                  children: [
+                    const Icon(Icons.person, size: 12),
+                    const SizedBox(width: 4),
+                    Text(writerName, style: const TextStyle(fontSize: 12)),
                   children: [
                     const Icon(Icons.person, size: 12),
                     const SizedBox(width: 4),
@@ -242,7 +387,22 @@ class CommunityScreen extends StatelessWidget {
                   'Occur Time: $occurDate $occurTime',
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Occur Time: $occurDate $occurTime',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8, bottom: 8),
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                'Written: ${createdAt.toLocal().toString().split(' ')[0]}',
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              ),
             ),
           ),
           Padding(
