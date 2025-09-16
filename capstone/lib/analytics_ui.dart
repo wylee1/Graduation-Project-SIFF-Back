@@ -162,10 +162,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   _buildCrimeStatsCards(),
                   const SizedBox(height: 24),
 
-                  // 범죄 유형별 파이 차트
-                  _buildPieChart(),
-                  const SizedBox(height: 24),
-
                   // 월간 추세 막대 그래프
                   _buildMonthlyTrendsChart(),
                 ],
@@ -272,52 +268,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildPieChart() {
-    final totalCrimes = crimeStats.values.fold(0, (sum, count) => sum + count);
-
-    if (totalCrimes == 0) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(child: Text('No data available.')),
-        ),
-      );
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Crime Distribution by Type',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: crimeTypes.map((type) {
-                    final count = crimeStats[type] ?? 0;
-                    final percentage = count / totalCrimes * 100;
-                    return PieChartSectionData(
-                      value: count.toDouble(),
-                      title: '${percentage.toStringAsFixed(1)}%',
-                      color: crimeColors[type],
-                      radius: 60,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
