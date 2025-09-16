@@ -44,6 +44,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     'Jungnang-gu'
   ];
 
+  final Map<String, String> districtNameMap = {
+    'Gangnam-gu': '강남구',
+    'Gangdong-gu': '강동구',
+    'Gangbuk-gu': '강북구',
+    'Gangseo-gu': '강서구',
+    'Gwanak-gu': '관악구',
+    'Gwangjin-gu': '광진구',
+    'Guro-gu': '구로구',
+    'Geumcheon-gu': '금천구',
+    'Nowon-gu': '노원구',
+    'Dobong-gu': '도봉구',
+    'Dongdaemun-gu': '동대문구',
+    'Dongjak-gu': '동작구',
+    'Mapo-gu': '마포구',
+    'Seodaemun-gu': '서대문구',
+    'Seocho-gu': '서초구',
+    'Seongdong-gu': '성동구',
+    'Seongbuk-gu': '성북구',
+    'Songpa-gu': '송파구',
+    'Yangcheon-gu': '양천구',
+    'Yeongdeungpo-gu': '영등포구',
+    'Yongsan-gu': '용산구',
+    'Eunpyeong-gu': '은평구',
+    'Jongno-gu': '종로구',
+    'Jung-gu': '중구',
+    'Jungnang-gu': '중랑구',
+  };
+
   final List<String> crimeTypes = [
     'Arson',
     'Assault',
@@ -87,14 +115,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final crimeType = data['Crime Type'] ?? '';
-        final location = data['location'] ?? '';
+        final address = data['Address'] ?? '';
+        String selectedKorDistrict = selectedDistrict == 'All'
+            ? 'All'
+            : (districtNameMap[selectedDistrict] ?? selectedDistrict);
+
         final timeStr = data['Time'] ?? '';
 
         // 구 필터링 (selectedDistrict가 'All'이 아닌 경우)
-        if (selectedDistrict != 'All' && !location.contains(selectedDistrict)) {
+        if (selectedKorDistrict != 'All' && address != selectedKorDistrict) {
           continue;
         }
-
         // 범죄 유형별 카운트
         if (crimeTypes.contains(crimeType)) {
           stats[crimeType] = (stats[crimeType] ?? 0) + 1;
@@ -125,14 +156,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   int _extractMonth(String timeStr) {
-    // "2024-03-15" 형태에서 월 추출
-    if (timeStr.contains('-')) {
-      final parts = timeStr.split('-');
-      if (parts.length >= 2) {
-        return int.parse(parts[1]);
+    // "2024.08.29. PM 11:03"와 같이 .으로 구분된 날짜에서 월 추출
+    try {
+      final regex = RegExp(r'(\d{4})\.(\d{2})\.(\d{2})');
+      final match = regex.firstMatch(timeStr);
+      if (match != null) {
+        return int.parse(match.group(2)!);
       }
-    }
-    return 1; // 기본값
+    } catch (e) {}
+    return 1;
   }
 
   @override
@@ -160,10 +192,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                   // 범죄 유형별 통계 카드
                   _buildCrimeStatsCards(),
-                  const SizedBox(height: 24),
-
-                  // 범죄 유형별 파이 차트
-                  _buildPieChart(),
                   const SizedBox(height: 24),
 
                   // 월간 추세 막대 그래프
@@ -275,52 +303,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildPieChart() {
-    final totalCrimes = crimeStats.values.fold(0, (sum, count) => sum + count);
-
-    if (totalCrimes == 0) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(child: Text('No data available.')),
-        ),
-      );
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Crime Distribution by Type',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: crimeTypes.map((type) {
-                    final count = crimeStats[type] ?? 0;
-                    final percentage = count / totalCrimes * 100;
-                    return PieChartSectionData(
-                      value: count.toDouble(),
-                      title: '${percentage.toStringAsFixed(1)}%',
-                      color: crimeColors[type],
-                      radius: 60,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildMonthlyTrendsChart() {
     return Card(
       child: Padding(
@@ -378,7 +360,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                     ),
                     leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 10, // 10 단위로만 보이게
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          // 10, 20, 30, 40, ...만 출력
+                          if (value % 10 == 0) {
+                            return Text(
+                              '${value.toInt()}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.left,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
                     topTitles:
                         AxisTitles(sideTitles: SideTitles(showTitles: false)),
