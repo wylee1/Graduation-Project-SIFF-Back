@@ -125,14 +125,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   int _extractMonth(String timeStr) {
-    // "2024-03-15" 형태에서 월 추출
-    if (timeStr.contains('-')) {
-      final parts = timeStr.split('-');
-      if (parts.length >= 2) {
-        return int.parse(parts[1]);
+    // "2024.08.29. PM 11:03"와 같이 .으로 구분된 날짜에서 월 추출
+    try {
+      final regex = RegExp(r'(\d{4})\.(\d{2})\.(\d{2})');
+      final match = regex.firstMatch(timeStr);
+      if (match != null) {
+        return int.parse(match.group(2)!);
       }
-    }
-    return 1; // 기본값
+    } catch (e) {}
+    return 1;
   }
 
   @override
