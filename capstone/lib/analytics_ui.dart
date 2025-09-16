@@ -329,7 +329,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                     ),
                     leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 10, // 10 단위로만 보이게
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          // 10, 20, 30, 40, ...만 출력
+                          if (value % 10 == 0) {
+                            return Text(
+                              '${value.toInt()}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.left,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
                     topTitles:
                         AxisTitles(sideTitles: SideTitles(showTitles: false)),
