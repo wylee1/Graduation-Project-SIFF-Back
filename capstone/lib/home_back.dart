@@ -256,6 +256,7 @@ class HomeMapPageState extends State<HomeMapPage> {
         context,
         MaterialPageRoute(
           builder: (context) => CrimeDetailPage(
+            markerId: d.id,
             crimeType: d.crimeType,
             occurrenceLocation: d.name,
             occurrenceTime: d.time,
@@ -272,10 +273,11 @@ class HomeMapPageState extends State<HomeMapPage> {
     await _showOverlappedMarkersSheetTranslated(related);
   }
 
-  Future<void> _showOverlappedMarkersSheetTranslated(List<MarkerData> items) async {
+  Future<void> _showOverlappedMarkersSheetTranslated(
+      List<MarkerData> items) async {
     // 1) 원문 배열 만들기 (제목: crimeType, 부제목: description(or name) + time)
     final titles = <String>[];
-    final subs   = <String>[];
+    final subs = <String>[];
     for (final d in items) {
       titles.add(d.crimeType);
       final main = (d.description.isNotEmpty ? d.description : d.name);
@@ -289,7 +291,7 @@ class HomeMapPageState extends State<HomeMapPage> {
       to: mapLanguageNotifier.value,
     );
     final tTitles = outs.sublist(0, titles.length);
-    final tSubs   = outs.sublist(titles.length);
+    final tSubs = outs.sublist(titles.length);
 
     if (!mounted) return;
 
@@ -318,6 +320,7 @@ class HomeMapPageState extends State<HomeMapPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => CrimeDetailPage(
+                    markerId: d.id,
                     crimeType: d.crimeType,
                     occurrenceLocation: d.name,
                     occurrenceTime: d.time,
