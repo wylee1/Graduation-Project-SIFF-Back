@@ -29,16 +29,16 @@ class _ReportUIState extends State<ReportUI> {
     'Drug',
     'Etc',
   ];
-  List<String> _crimeTypesDisp = [];     // 번역된 표시용
-  String? _selectedCrimeTypeEn;         // 선택 값은 영어 원본으로 유지 (DB 저장용)
+  List<String> _crimeTypesDisp = []; // 번역된 표시용
+  String? _selectedCrimeTypeEn; // 선택 값은 영어 원본으로 유지 (DB 저장용)
 
   // 텍스트 컨트롤러
-  final TextEditingController _dateController        = TextEditingController();
-  final TextEditingController _timeController        = TextEditingController();
-  final TextEditingController _titleController       = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addressController     = TextEditingController();
-  final TextEditingController _regionController      = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _regionController = TextEditingController();
 
   // 이미지/상태
   File? _pickedImage;
@@ -46,21 +46,21 @@ class _ReportUIState extends State<ReportUI> {
   final ImagePicker _picker = ImagePicker();
 
   // ==== 번역된 라벨/힌트/버튼/문구 ====
-  String _appBarTitle           = 'Create New Report';
-  String _labelCrimeType        = 'Crime Type';
+  String _appBarTitle = 'Create New Report';
+  String _labelCrimeType = 'Crime Type';
   String _labelDateOfOccurrence = 'Date of Occurrence';
   String _labelTimeOfOccurrence = 'Time of Occurrence';
-  String _labelTitle            = 'Title';
+  String _labelTitle = 'Title';
   String _labelBriefDescription = 'Brief Description';
-  String _labelAddress          = 'Address';
-  String _labelRegion           = 'Region';
-  String _tapToSelectImage      = 'Tap to select an image';
-  String _btnSubmitReport       = 'Submit Report';
+  String _labelAddress = 'Address';
+  String _labelRegion = 'Region';
+  String _tapToSelectImage = 'Tap to select an image';
+  String _btnSubmitReport = 'Submit Report';
 
-  String _msgPleaseSelectType   = 'Please select a crime type';
-  String _msgImageUploadFailed  = 'Image upload failed. Please try again.';
-  String _msgReportSubmitted    = 'Report submitted successfully.';
-  String _msgErrorSubmitting    = 'Error submitting report';
+  String _msgPleaseSelectType = 'Please select a crime type';
+  String _msgImageUploadFailed = 'Image upload failed. Please try again.';
+  String _msgReportSubmitted = 'Report submitted successfully.';
+  String _msgErrorSubmitting = 'Error submitting report';
 
   @override
   void initState() {
@@ -91,7 +91,8 @@ class _ReportUIState extends State<ReportUI> {
     final lang = mapLanguageNotifier.value;
 
     // 드롭다운 항목은 한 번에
-    final types = await translateMany(texts: _crimeTypesEn, source: 'en', to: lang);
+    final types =
+        await translateMany(texts: _crimeTypesEn, source: 'en', to: lang);
 
     // 라벨/힌트/버튼/문구는 개별 또는 일부 묶음
     final ui1 = await translateMany(
@@ -124,39 +125,50 @@ class _ReportUIState extends State<ReportUI> {
 
     if (!mounted) return;
     setState(() {
-      _crimeTypesDisp        = types;
-      _appBarTitle           = ui1.elementAt(0);
-      _labelCrimeType        = ui1.elementAt(1);
+      _crimeTypesDisp = types;
+      _appBarTitle = ui1.elementAt(0);
+      _labelCrimeType = ui1.elementAt(1);
       _labelDateOfOccurrence = ui1.elementAt(2);
       _labelTimeOfOccurrence = ui1.elementAt(3);
-      _labelTitle            = ui1.elementAt(4);
+      _labelTitle = ui1.elementAt(4);
       _labelBriefDescription = ui1.elementAt(5);
-      _labelAddress          = ui1.elementAt(6);
-      _labelRegion           = ui1.elementAt(7);
-      _tapToSelectImage      = ui1.elementAt(8);
-      _btnSubmitReport       = ui1.elementAt(9);
+      _labelAddress = ui1.elementAt(6);
+      _labelRegion = ui1.elementAt(7);
+      _tapToSelectImage = ui1.elementAt(8);
+      _btnSubmitReport = ui1.elementAt(9);
 
-      _msgPleaseSelectType   = ui2.elementAt(0);
-      _msgImageUploadFailed  = ui2.elementAt(1);
-      _msgReportSubmitted    = ui2.elementAt(2);
-      _msgErrorSubmitting    = ui2.elementAt(3);
+      _msgPleaseSelectType = ui2.elementAt(0);
+      _msgImageUploadFailed = ui2.elementAt(1);
+      _msgReportSubmitted = ui2.elementAt(2);
+      _msgErrorSubmitting = ui2.elementAt(3);
     });
   }
 
+  bool _isPickingImage = false;
+
   Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImage = File(pickedFile.path);
-      });
+    if (_isPickingImage) return;
+    _isPickingImage = true;
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+          source: ImageSource.gallery, imageQuality: 70);
+      if (pickedFile != null) {
+        setState(() {
+          _pickedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('이미지 선택 에러: $e');
+    } finally {
+      _isPickingImage = false;
     }
   }
 
   Future<String?> _uploadImage(File imageFile) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-      final fileName = 'reports/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'reports/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = FirebaseStorage.instance.ref().child(fileName);
 
       final snapshot = await ref.putFile(imageFile);
@@ -195,18 +207,18 @@ class _ReportUIState extends State<ReportUI> {
       final writerName = email.contains('@') ? email.split('@')[0] : '';
 
       await FirebaseFirestore.instance.collection('report_community').add({
-        'title'       : _titleController.text.trim(),
-        'incidentType': _selectedCrimeTypeEn!,     // ★ 영어 원본 저장
-        'occurDate'   : _dateController.text.trim(),
-        'occurTime'   : _timeController.text.trim(),
-        'description' : _descriptionController.text.trim(),
-        'location'    : _addressController.text.trim(),
-        'regionName'  : _regionController.text.trim(),
-        'imageUrl'    : imageUrl ?? '',
-        'status'      : 'pending',
-        'createdAt'   : FieldValue.serverTimestamp(),
-        'writerId'    : user?.uid ?? '',
-        'writerName'  : writerName,
+        'title': _titleController.text.trim(),
+        'incidentType': _selectedCrimeTypeEn!, // ★ 영어 원본 저장
+        'occurDate': _dateController.text.trim(),
+        'occurTime': _timeController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'location': _addressController.text.trim(),
+        'regionName': _regionController.text.trim(),
+        'imageUrl': imageUrl ?? '',
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'writerId': user?.uid ?? '',
+        'writerName': writerName,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -300,7 +312,8 @@ class _ReportUIState extends State<ReportUI> {
   @override
   Widget build(BuildContext context) {
     // 표시용 드롭다운 라벨(번역된 리스트) 준비
-    final itemsDisp = (_crimeTypesDisp.isNotEmpty) ? _crimeTypesDisp : _crimeTypesEn;
+    final itemsDisp =
+        (_crimeTypesDisp.isNotEmpty) ? _crimeTypesDisp : _crimeTypesEn;
 
     return Scaffold(
       appBar: AppBar(
@@ -321,15 +334,16 @@ class _ReportUIState extends State<ReportUI> {
               child: DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   labelText: _labelCrimeType,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 value: _selectedCrimeTypeEn,
                 items: List.generate(_crimeTypesEn.length, (i) {
-                  final en   = _crimeTypesEn[i];
+                  final en = _crimeTypesEn[i];
                   final disp = itemsDisp[i];
                   return DropdownMenuItem<String>(
-                    value: en,           // 값은 영어 원본
-                    child: Text(disp),   // 표시 텍스트는 번역본
+                    value: en, // 값은 영어 원본
+                    child: Text(disp), // 표시 텍스트는 번역본
                   );
                 }),
                 onChanged: (val) => setState(() => _selectedCrimeTypeEn = val),
@@ -338,10 +352,10 @@ class _ReportUIState extends State<ReportUI> {
 
             _buildDatePickerField(),
             _buildTimePickerField(),
-            _buildTextField(_titleController,       _labelTitle),
+            _buildTextField(_titleController, _labelTitle),
             _buildTextField(_descriptionController, _labelBriefDescription),
-            _buildTextField(_addressController,     _labelAddress),
-            _buildTextField(_regionController,      _labelRegion),
+            _buildTextField(_addressController, _labelAddress),
+            _buildTextField(_regionController, _labelRegion),
 
             const SizedBox(height: 16),
 
@@ -375,7 +389,8 @@ class _ReportUIState extends State<ReportUI> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitReport,
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25)),
                   ),
                   child: _isSubmitting
                       ? const CircularProgressIndicator(color: Colors.white)
