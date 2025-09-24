@@ -9,6 +9,7 @@ import 'analytics_ui.dart';
 import 'app_language.dart';
 import 'localizedtext.dart';
 import 'translation_service.dart' show translateText;
+import 'chat_bot_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -126,16 +127,26 @@ class _MainScreenState extends State<MainScreen> {
         centerTitle: true,
         scrolledUnderElevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const UserSettingScreen()),
-              );
-            },
-          ),
-        ],
+        IconButton(
+          icon: const Icon(Icons.chat_bubble_outline),
+          tooltip: "AI 챗봇",
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChatBotScreen()),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.person),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UserSettingScreen()),
+            );
+          },
+        ),
+      ],
       ),
       body: Stack(
         children: [
