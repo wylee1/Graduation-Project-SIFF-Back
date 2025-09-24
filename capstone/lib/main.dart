@@ -6,6 +6,7 @@ import 'home_back.dart';
 import 'login_ui.dart'; // LoginScreen을 사용하려면 import가 필요합니다.z
 import 'app_language.dart';
 import 'translation_service.dart';
+import 'chat_bot_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 바인딩 초기화 (권장)z
   
@@ -32,6 +33,9 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           locale: appLocale, // 원치 않으면 이 줄 삭제
           home: const LoginScreen(),
+          routes: {
+            '/chat': (_) => const ChatBotScreen(),
+          },
         );
       },
     );
